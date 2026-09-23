@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <title>Family Budget</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">תקציב משפחתי</p>
+        <h1>ספטמבר 2026</h1>
+      </div>
+      <button class="icon-btn" aria-label="הגדרות">⚙︎</button>
+    </header>
+
+    <section class="hero-card">
+      <p>פנוי אמיתי החודש</p>
+      <div class="hero-amount">₪9,230</div>
+      <div class="hero-sub">אחרי הוצאות קבועות צפויות</div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>הכנסות</span>
+        <strong>₪23,500</strong>
+      </article>
+      <article class="stat-card">
+        <span>הוצאות</span>
+        <strong>₪14,270</strong>
+      </article>
+      <article class="stat-card">
+        <span>קבועות שנותרו</span>
+        <strong>₪6,100</strong>
+      </article>
+      <article class="stat-card">
+        <span>תחזית סוף חודש</span>
+        <strong>₪18,610</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">קצב הוצאות</p>
+          <h2>החודש</h2>
+        </div>
+        <span class="trend">+8.4%</span>
+      </div>
+      <div class="chart" aria-label="גרף הוצאות דמה">
+        <span style="height:35%"></span>
+        <span style="height:58%"></span>
+        <span style="height:42%"></span>
+        <span style="height:77%"></span>
+        <span style="height:63%"></span>
+        <span style="height:88%"></span>
+        <span style="height:72%"></span>
+        <span style="height:95%"></span>
+        <span style="height:68%"></span>
+        <span style="height:82%"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">חלוקה</p>
+          <h2>קטגוריות</h2>
+        </div>
+      </div>
+      <div class="category-list">
+        <div class="category-row">
+          <div><strong>סופר</strong><small>₪3,420</small></div>
+          <div class="progress"><i style="width:72%"></i></div>
+          <b>72%</b>
+        </div>
+        <div class="category-row">
+          <div><strong>אוכל בחוץ</strong><small>₪1,720</small></div>
+          <div class="progress"><i style="width:43%"></i></div>
+          <b>43%</b>
+        </div>
+        <div class="category-row">
+          <div><strong>רכב</strong><small>₪1,390</small></div>
+          <div class="progress"><i style="width:55%"></i></div>
+          <b>55%</b>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="ניווט ראשי">
+    <button class="active"><span>⌂</span><small>בית</small></button>
+    <button><span>◫</span><small>ניתוח</small></button>
+    <button><span>₪</span><small>עסקאות</small></button>
+    <button><span>⚙︎</span><small>הגדרות</small></button>
+  </nav>
+
+  <script src="./app.js"></script>
+</body>
+</html>
