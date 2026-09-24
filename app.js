@@ -151,7 +151,7 @@ function render(){
       : '<div class="empty-state">אין בקשות הצטרפות ממתינות</div>';
   }
   $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><strong>${money(x.amount)}</strong></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
-  $("fixedList").innerHTML=state.fixed.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>קבועה</small></div><strong>${money(x.amount)}</strong></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
+  $("fixedList").innerHTML=state.fixed.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
   $("categoriesList").innerHTML=state.categories.map(c=>{const b=state.budgets.find(x=>x.category_id===c.id);return `<div class="settings-row"><div><strong>${escapeHtml(c.name)}</strong><small>${b?"תקציב "+money(b.monthly_limit):"ללא תקציב"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="setBudget('${c.id}','${escapeHtml(c.name)}')">תקציב</button></div></div>`}).join("");
 
   $("txMember").innerHTML=state.members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join("");
@@ -164,6 +164,7 @@ function render(){
 
 $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
 $("fixedForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value,amount:Number($("fixedValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
+window.saveFixed=async(id)=>{const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);toast("ההוצאה עודכנה");await loadAll();};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
 window.setBudget=async(categoryId,name)=>{const value=prompt(`תקציב חודשי ל-${name}`);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const existing=state.budgets.find(b=>b.category_id===categoryId);const q=existing?sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id):sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount});const {error}=await q;if(error)return toast(error.message);await loadAll();};
