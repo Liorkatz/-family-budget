@@ -135,12 +135,13 @@
 
         <details class="settings-card">
           <summary>הוצאות קבועות</summary>
+          <p class="muted compact">מלא רק את מה שרלוונטי. סעיף שלא בשימוש נשאר על 0.</p>
+          <div id="fixedList" class="settings-list"></div>
           <form id="fixedForm" class="inline-form three">
-            <input id="fixedDesc" placeholder="תיאור" required />
+            <input id="fixedDesc" placeholder="הוצאה נוספת" required />
             <input id="fixedValue" type="number" min="0" step="0.01" placeholder="סכום" required />
             <button class="small-btn" type="submit">הוסף</button>
           </form>
-          <div id="fixedList" class="settings-list"></div>
         </details>
 
         <details class="settings-card">
