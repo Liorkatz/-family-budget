@@ -109,8 +109,12 @@
               <small>קוד משפחה</small>
               <strong id="familyCodeHint">לא הוגדר</strong>
             </div>
-            <button id="rotateFamilyCode" class="small-btn" type="button">צור / החלף קוד</button>
+            <button id="rotateFamilyCode" class="small-btn" type="button">קוד אקראי</button>
           </div>
+          <form id="customFamilyCodeForm" class="inline-form family-code-form">
+            <input id="customFamilyCode" minlength="6" maxlength="24" placeholder="קוד חדש, למשל KATZ2026" autocapitalize="characters" required />
+            <button class="small-btn" type="submit">שמור קוד</button>
+          </form>
           <div id="pendingRequests" class="settings-list"></div>
         </details>
 
