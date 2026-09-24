@@ -10,3 +10,6 @@ Family budget dashboard optimized for iPhone and GitHub Pages.
 - Apple Shortcuts: Apple Pay transaction ingestion
 
 No production secrets belong in this repository.
+
+
+Pages deployment trigger: 2026-09-24
