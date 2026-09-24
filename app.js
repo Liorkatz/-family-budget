@@ -10,7 +10,7 @@ const toast = (msg) => { $("toast").textContent=msg; $("toast").classList.add("s
 const escapeHtml = (v="") => String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
 
 let authMode = "login";
-let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[] };
+let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
 function show(id){
   ["authView","bootstrapView","appView"].forEach(x=>$(x).classList.add("hidden"));
@@ -30,7 +30,19 @@ async function init(){
   if(!session){ show("authView"); return; }
   try{
     const membership=await currentMembership();
-    if(!membership){ show("bootstrapView"); return; }
+    if(!membership){
+      show("bootstrapView");
+      const {data:joinStatus,error:joinErr}=await sb.functions.invoke("family-join",{body:{action:"status"}});
+      if(!joinErr && joinStatus?.request?.status==="pending"){
+        $("familyChoiceBox").classList.add("hidden");
+        $("pendingJoinBox").classList.remove("hidden");
+        $("pendingJoinText").textContent=`ממתין לאישור של ${joinStatus.request.families?.name || "מנהל המשפחה"}`;
+      }else{
+        $("familyChoiceBox").classList.remove("hidden");
+        $("pendingJoinBox").classList.add("hidden");
+      }
+      return;
+    }
     state.me=membership;
     state.family=membership.families;
     $("familyTitle").textContent=state.family?.name || "תקציב משפחתי";
@@ -61,10 +73,26 @@ $("bootstrapForm").onsubmit=async(e)=>{
   const {data,error}=await sb.functions.invoke("bootstrap-family",{body:{familyName:$("familyName").value,displayName:$("displayName").value}});
   if(error || data?.error){ toast(data?.error || error.message); return; }
   toast("המשפחה נוצרה");
+  if(data?.familyCode){
+    $("familyCodeValue").value=data.familyCode;
+    $("familyCodeDialog").showModal();
+  }
   await init();
 };
 
-async function logout(){ await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[]}; show("authView"); }
+$("joinFamilyForm").onsubmit=async(e)=>{
+  e.preventDefault();
+  const {data,error}=await sb.functions.invoke("family-join",{body:{
+    action:"request",
+    code:$("joinCode").value,
+    displayName:$("joinDisplayName").value
+  }});
+  if(error||data?.error){ toast(data?.error||error.message); return; }
+  toast("בקשת ההצטרפות נשלחה למנהל");
+  await init();
+};
+
+async function logout(){ await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[],adminInfo:null}; show("authView"); }
 $("logoutBtn").onclick=logout; $("bootstrapLogout").onclick=logout;
 
 document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.onclick=()=>{
@@ -86,6 +114,12 @@ async function loadAll(){
   ]);
   for(const r of [members,cats,txs,incomes,fixed,budgets]) if(r.error) throw r.error;
   state.members=members.data; state.categories=cats.data; state.transactions=txs.data; state.incomes=incomes.data; state.fixed=fixed.data; state.budgets=budgets.data;
+  if(state.me?.role==="admin"){
+    const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"info"}});
+    if(!error && !data?.error) state.adminInfo=data;
+  } else {
+    state.adminInfo=null;
+  }
   render();
 }
 
@@ -106,7 +140,16 @@ function render(){
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
   $("allTransactions").innerHTML=txHtml(state.transactions);
 
-  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">Shortcut</button></div></div>`).join("");
+  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">Shortcut</button>`:""}</div></div>`).join("");
+
+  $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
+  if(state.me?.role==="admin"){
+    $("familyCodeHint").textContent=state.adminInfo?.codeHint ? `FAM-•••${state.adminInfo.codeHint}` : "לא הוגדר";
+    const pending=state.adminInfo?.pending||[];
+    $("pendingRequests").innerHTML=pending.length
+      ? pending.map(r=>`<div class="settings-row"><div><strong>${escapeHtml(r.display_name)}</strong><small>בקשת הצטרפות</small></div><div class="mini-actions"><button class="mini-btn approve" onclick="decideJoin('${r.id}','approve')">אשר</button><button class="mini-btn" onclick="decideJoin('${r.id}','reject')">דחה</button></div></div>`).join("")
+      : '<div class="empty-state">אין בקשות הצטרפות ממתינות</div>';
+  }
   $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><strong>${money(x.amount)}</strong></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
   $("fixedList").innerHTML=state.fixed.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>קבועה</small></div><strong>${money(x.amount)}</strong></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
   $("categoriesList").innerHTML=state.categories.map(c=>{const b=state.budgets.find(x=>x.category_id===c.id);return `<div class="settings-row"><div><strong>${escapeHtml(c.name)}</strong><small>${b?"תקציב "+money(b.monthly_limit):"ללא תקציב"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="setBudget('${c.id}','${escapeHtml(c.name)}')">תקציב</button></div></div>`}).join("");
@@ -119,7 +162,6 @@ function render(){
   $("budgetBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>ניצול תקציבים</strong></div>'+state.budgets.map(b=>{const used=state.transactions.filter(t=>t.category_id===b.category_id).reduce((s,t)=>s+Number(t.amount),0);const pct=Math.min(100,Math.round(used/Number(b.monthly_limit)*100)||0);return `<div style="margin:14px 0"><div class="bar-label"><span>${escapeHtml(b.categories?.name||"קטגוריה")}</span><strong>${money(used)} / ${money(b.monthly_limit)}</strong></div><div class="progress"><i style="width:${pct}%"></i></div></div>`}).join("")+'</div>';
 }
 
-$("memberForm").onsubmit=async(e)=>{e.preventDefault();const name=$("memberName").value.trim();const {error}=await sb.from("members").insert({family_id:state.family.id,name,role:"member"});if(error)return toast(error.message);$("memberName").value="";await loadAll();};
 $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
 $("fixedForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value,amount:Number($("fixedValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
@@ -127,6 +169,22 @@ $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.
 window.setBudget=async(categoryId,name)=>{const value=prompt(`תקציב חודשי ל-${name}`);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const existing=state.budgets.find(b=>b.category_id===categoryId);const q=existing?sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id):sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount});const {error}=await q;if(error)return toast(error.message);await loadAll();};
 
 window.makeToken=async(memberId,name)=>{const {data,error}=await sb.functions.invoke("create-shortcut-token",{body:{memberId,label:`iPhone - ${name}`}});if(error||data?.error)return toast(data?.error||error.message);$("tokenValue").value=data.token;$("tokenDialog").showModal();};
+$("closeFamilyCodeDialog").onclick=()=>$("familyCodeDialog").close();
+$("copyFamilyCode").onclick=async()=>{await navigator.clipboard.writeText($("familyCodeValue").value);toast("קוד המשפחה הועתק");};
+$("rotateFamilyCode").onclick=async()=>{
+  const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"rotate"}});
+  if(error||data?.error)return toast(data?.error||error.message);
+  $("familyCodeValue").value=data.familyCode;
+  $("familyCodeDialog").showModal();
+  await loadAll();
+};
+window.decideJoin=async(requestId,action)=>{
+  const {data,error}=await sb.functions.invoke("manage-family",{body:{action,requestId}});
+  if(error||data?.error)return toast(data?.error||error.message);
+  toast(action==="approve"?"המשתמש אושר":"הבקשה נדחתה");
+  await loadAll();
+};
+
 $("closeTokenDialog").onclick=()=>$("tokenDialog").close();
 $("copyToken").onclick=async()=>{await navigator.clipboard.writeText($("tokenValue").value);toast("ה־Token הועתק");};
 
