@@ -8,95 +8,149 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <div id="toast" class="toast"></div>
+
   <main class="shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">תקציב משפחתי</p>
-        <h1>ספטמבר 2026</h1>
-      </div>
-      <button class="icon-btn" aria-label="הגדרות">⚙︎</button>
-    </header>
-
-    <section class="hero-card">
-      <p>פנוי אמיתי החודש</p>
-      <div class="hero-amount">₪9,230</div>
-      <div class="hero-sub">אחרי הוצאות קבועות צפויות</div>
+    <section id="authView" class="auth-card">
+      <div class="brand-mark">₪</div>
+      <p class="eyebrow">FAMILY BUDGET</p>
+      <h1>התקציב המשפחתי שלך</h1>
+      <p class="muted">כניסה מאובטחת לנתונים, תקציבים ועסקאות Apple Pay.</p>
+      <form id="authForm" class="form-stack">
+        <input id="authEmail" type="email" autocomplete="email" placeholder="אימייל" required />
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="סיסמה" required />
+        <button class="primary" type="submit">כניסה</button>
+      </form>
+      <button id="toggleAuthMode" class="link-btn" type="button">אין חשבון? צור חשבון</button>
     </section>
 
-    <section class="stats-grid">
-      <article class="stat-card">
-        <span>הכנסות</span>
-        <strong>₪23,500</strong>
-      </article>
-      <article class="stat-card">
-        <span>הוצאות</span>
-        <strong>₪14,270</strong>
-      </article>
-      <article class="stat-card">
-        <span>קבועות שנותרו</span>
-        <strong>₪6,100</strong>
-      </article>
-      <article class="stat-card">
-        <span>תחזית סוף חודש</span>
-        <strong>₪18,610</strong>
-      </article>
+    <section id="bootstrapView" class="auth-card hidden">
+      <p class="eyebrow">הגדרה ראשונית</p>
+      <h1>בוא ניצור את המשפחה</h1>
+      <form id="bootstrapForm" class="form-stack">
+        <input id="familyName" placeholder="שם המשפחה, למשל משפחת כץ" required />
+        <input id="displayName" placeholder="השם שלך" required />
+        <button class="primary" type="submit">צור משפחה</button>
+      </form>
+      <button id="bootstrapLogout" class="link-btn" type="button">התנתק</button>
     </section>
 
-    <section class="panel">
-      <div class="panel-head">
+    <section id="appView" class="hidden">
+      <header class="topbar">
         <div>
-          <p class="eyebrow">קצב הוצאות</p>
-          <h2>החודש</h2>
+          <p class="eyebrow" id="familyTitle">תקציב משפחתי</p>
+          <h1 id="monthTitle">החודש</h1>
         </div>
-        <span class="trend">+8.4%</span>
-      </div>
-      <div class="chart" aria-label="גרף הוצאות דמה">
-        <span style="height:35%"></span>
-        <span style="height:58%"></span>
-        <span style="height:42%"></span>
-        <span style="height:77%"></span>
-        <span style="height:63%"></span>
-        <span style="height:88%"></span>
-        <span style="height:72%"></span>
-        <span style="height:95%"></span>
-        <span style="height:68%"></span>
-        <span style="height:82%"></span>
-      </div>
-    </section>
+        <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
+      </header>
 
-    <section class="panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">חלוקה</p>
-          <h2>קטגוריות</h2>
-        </div>
-      </div>
-      <div class="category-list">
-        <div class="category-row">
-          <div><strong>סופר</strong><small>₪3,420</small></div>
-          <div class="progress"><i style="width:72%"></i></div>
-          <b>72%</b>
-        </div>
-        <div class="category-row">
-          <div><strong>אוכל בחוץ</strong><small>₪1,720</small></div>
-          <div class="progress"><i style="width:43%"></i></div>
-          <b>43%</b>
-        </div>
-        <div class="category-row">
-          <div><strong>רכב</strong><small>₪1,390</small></div>
-          <div class="progress"><i style="width:55%"></i></div>
-          <b>55%</b>
-        </div>
-      </div>
+      <section id="homePage" class="page active">
+        <article class="hero-card">
+          <p>פנוי אמיתי החודש</p>
+          <div class="hero-amount" id="availableAmount">₪0</div>
+          <div class="hero-sub">הכנסות פחות הוצאות בפועל והוצאות קבועות שטרם שולמו</div>
+        </article>
+
+        <section class="stats-grid">
+          <article class="stat-card"><span>הכנסות</span><strong id="incomeAmount">₪0</strong></article>
+          <article class="stat-card"><span>הוצאות בפועל</span><strong id="spentAmount">₪0</strong></article>
+          <article class="stat-card"><span>קבועות החודש</span><strong id="fixedAmount">₪0</strong></article>
+          <article class="stat-card"><span>תחזית סוף חודש</span><strong id="forecastAmount">₪0</strong></article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><p class="eyebrow">חלוקה</p><h2>קטגוריות</h2></div></div>
+          <div id="categoryBars" class="category-list empty-state">אין עדיין עסקאות</div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><p class="eyebrow">אחרונות</p><h2>עסקאות</h2></div></div>
+          <div id="recentTransactions" class="transaction-list empty-state">אין עדיין עסקאות</div>
+        </section>
+      </section>
+
+      <section id="transactionsPage" class="page">
+        <div class="page-title"><div><p class="eyebrow">תנועות</p><h2>עסקאות</h2></div><button id="openAddTransaction" class="small-btn">+ הוסף</button></div>
+        <div id="allTransactions" class="transaction-list panel"></div>
+      </section>
+
+      <section id="analysisPage" class="page">
+        <div class="page-title"><div><p class="eyebrow">ניתוח</p><h2>תמונת מצב</h2></div></div>
+        <section class="panel"><div id="memberBreakdown"></div></section>
+        <section class="panel"><div id="budgetBreakdown"></div></section>
+      </section>
+
+      <section id="settingsPage" class="page">
+        <div class="page-title"><div><p class="eyebrow">ניהול</p><h2>הגדרות</h2></div></div>
+
+        <details class="settings-card" open>
+          <summary>בני משפחה</summary>
+          <form id="memberForm" class="inline-form">
+            <input id="memberName" placeholder="שם" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="membersList" class="settings-list"></div>
+        </details>
+
+        <details class="settings-card">
+          <summary>הכנסות</summary>
+          <form id="incomeForm" class="inline-form three">
+            <input id="incomeDesc" placeholder="תיאור" required />
+            <input id="incomeValue" type="number" min="0" step="0.01" placeholder="סכום" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="incomeList" class="settings-list"></div>
+        </details>
+
+        <details class="settings-card">
+          <summary>הוצאות קבועות</summary>
+          <form id="fixedForm" class="inline-form three">
+            <input id="fixedDesc" placeholder="תיאור" required />
+            <input id="fixedValue" type="number" min="0" step="0.01" placeholder="סכום" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="fixedList" class="settings-list"></div>
+        </details>
+
+        <details class="settings-card">
+          <summary>קטגוריות ותקציבים</summary>
+          <form id="categoryForm" class="inline-form">
+            <input id="categoryName" placeholder="קטגוריה חדשה" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="categoriesList" class="settings-list"></div>
+        </details>
+      </section>
     </section>
   </main>
 
-  <nav class="bottom-nav" aria-label="ניווט ראשי">
-    <button class="active"><span>⌂</span><small>בית</small></button>
-    <button><span>◫</span><small>ניתוח</small></button>
-    <button><span>₪</span><small>עסקאות</small></button>
-    <button><span>⚙︎</span><small>הגדרות</small></button>
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <button data-page="homePage" class="active"><span>⌂</span><small>בית</small></button>
+    <button data-page="analysisPage"><span>◫</span><small>ניתוח</small></button>
+    <button data-page="transactionsPage"><span>₪</span><small>עסקאות</small></button>
+    <button data-page="settingsPage"><span>⚙︎</span><small>הגדרות</small></button>
   </nav>
+
+  <dialog id="transactionDialog">
+    <form id="transactionForm" method="dialog" class="dialog-card">
+      <div class="dialog-head"><h3>הוספת עסקה</h3><button type="button" id="closeTransactionDialog">×</button></div>
+      <input id="txAmount" type="number" min="0" step="0.01" placeholder="סכום" required />
+      <input id="txMerchant" placeholder="בית עסק" />
+      <select id="txMember" required></select>
+      <select id="txCategory"><option value="">ללא קטגוריה</option></select>
+      <button class="primary" type="submit">שמור עסקה</button>
+    </form>
+  </dialog>
+
+  <dialog id="tokenDialog">
+    <div class="dialog-card">
+      <div class="dialog-head"><h3>Token ל־Shortcut</h3><button type="button" id="closeTokenDialog">×</button></div>
+      <p class="muted">ה־Token מוצג פעם אחת. שמור אותו בתוך Shortcut באייפון.</p>
+      <textarea id="tokenValue" readonly></textarea>
+      <button id="copyToken" class="primary">העתק Token</button>
+      <p class="endpoint">Endpoint:<br><code>https://ugdaeyfxxcaxloukqqkk.supabase.co/functions/v1/apple-pay</code></p>
+    </div>
+  </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
