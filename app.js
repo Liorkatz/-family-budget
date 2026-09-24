@@ -178,6 +178,18 @@ $("rotateFamilyCode").onclick=async()=>{
   $("familyCodeDialog").showModal();
   await loadAll();
 };
+
+$("customFamilyCodeForm").onsubmit=async(e)=>{
+  e.preventDefault();
+  const code=$("customFamilyCode").value.trim().toUpperCase();
+  const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"set_code",code}});
+  if(error||data?.error)return toast(data?.error||error.message);
+  $("customFamilyCode").value="";
+  $("familyCodeValue").value=data.familyCode;
+  $("familyCodeDialog").showModal();
+  toast("קוד המשפחה עודכן");
+  await loadAll();
+};
 window.decideJoin=async(requestId,action)=>{
   const {data,error}=await sb.functions.invoke("manage-family",{body:{action,requestId}});
   if(error||data?.error)return toast(data?.error||error.message);
