@@ -26,12 +26,31 @@
 
     <section id="bootstrapView" class="auth-card hidden">
       <p class="eyebrow">הגדרה ראשונית</p>
-      <h1>בוא ניצור את המשפחה</h1>
-      <form id="bootstrapForm" class="form-stack">
-        <input id="familyName" placeholder="שם המשפחה, למשל משפחת כץ" required />
-        <input id="displayName" placeholder="השם שלך" required />
-        <button class="primary" type="submit">צור משפחה</button>
-      </form>
+      <h1>משפחה חדשה או קיימת?</h1>
+
+      <div id="pendingJoinBox" class="pending-box hidden">
+        <strong>בקשת ההצטרפות ממתינה לאישור</strong>
+        <p id="pendingJoinText" class="muted"></p>
+      </div>
+
+      <div id="familyChoiceBox">
+        <form id="bootstrapForm" class="form-stack">
+          <h3>צור משפחה חדשה</h3>
+          <input id="familyName" placeholder="שם המשפחה, למשל משפחת כץ" required />
+          <input id="displayName" placeholder="השם שלך" required />
+          <button class="primary" type="submit">צור משפחה</button>
+        </form>
+
+        <div class="or-divider"><span>או</span></div>
+
+        <form id="joinFamilyForm" class="form-stack">
+          <h3>הצטרף למשפחה קיימת</h3>
+          <input id="joinDisplayName" placeholder="השם שלך" required />
+          <input id="joinCode" placeholder="קוד משפחה, למשל FAM-ABC123" autocapitalize="characters" required />
+          <button class="primary secondary" type="submit">שלח בקשת הצטרפות</button>
+        </form>
+      </div>
+
       <button id="bootstrapLogout" class="link-btn" type="button">התנתק</button>
     </section>
 
@@ -83,12 +102,20 @@
       <section id="settingsPage" class="page">
         <div class="page-title"><div><p class="eyebrow">ניהול</p><h2>הגדרות</h2></div></div>
 
+        <details id="familyAdminCard" class="settings-card" open>
+          <summary>ניהול המשפחה</summary>
+          <div class="family-code-box">
+            <div>
+              <small>קוד משפחה</small>
+              <strong id="familyCodeHint">לא הוגדר</strong>
+            </div>
+            <button id="rotateFamilyCode" class="small-btn" type="button">צור / החלף קוד</button>
+          </div>
+          <div id="pendingRequests" class="settings-list"></div>
+        </details>
+
         <details class="settings-card" open>
           <summary>בני משפחה</summary>
-          <form id="memberForm" class="inline-form">
-            <input id="memberName" placeholder="שם" required />
-            <button class="small-btn" type="submit">הוסף</button>
-          </form>
           <div id="membersList" class="settings-list"></div>
         </details>
 
@@ -140,6 +167,15 @@
       <select id="txCategory"><option value="">ללא קטגוריה</option></select>
       <button class="primary" type="submit">שמור עסקה</button>
     </form>
+  </dialog>
+
+  <dialog id="familyCodeDialog">
+    <div class="dialog-card">
+      <div class="dialog-head"><h3>קוד המשפחה</h3><button type="button" id="closeFamilyCodeDialog">×</button></div>
+      <p class="muted">שלח את הקוד רק לבני המשפחה. הזנת הקוד יוצרת בקשת הצטרפות בלבד — המנהל עדיין צריך לאשר.</p>
+      <textarea id="familyCodeValue" readonly></textarea>
+      <button id="copyFamilyCode" class="primary">העתק קוד</button>
+    </div>
   </dialog>
 
   <dialog id="tokenDialog">
