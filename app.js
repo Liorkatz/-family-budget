@@ -74,8 +74,7 @@ $("bootstrapForm").onsubmit=async(e)=>{
   if(error || data?.error){ toast(data?.error || error.message); return; }
   toast("המשפחה נוצרה");
   if(data?.familyCode){
-    $("familyCodeValue").value=data.familyCode;
-    $("familyCodeDialog").showModal();
+    sessionStorage.setItem("familyCode", data.familyCode);
   }
   await init();
 };
@@ -144,7 +143,8 @@ function render(){
 
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
-    $("familyCodeHint").textContent=state.adminInfo?.codeHint ? `FAM-•••${state.adminInfo.codeHint}` : "לא הוגדר";
+    const visibleCode=sessionStorage.getItem("familyCode");
+    $("familyCodeHint").textContent=visibleCode || (state.adminInfo?.codeHint ? `•••${state.adminInfo.codeHint}` : "לא הוגדר");
     const pending=state.adminInfo?.pending||[];
     $("pendingRequests").innerHTML=pending.length
       ? pending.map(r=>`<div class="settings-row"><div><strong>${escapeHtml(r.display_name)}</strong><small>בקשת הצטרפות</small></div><div class="mini-actions"><button class="mini-btn approve" onclick="decideJoin('${r.id}','approve')">אשר</button><button class="mini-btn" onclick="decideJoin('${r.id}','reject')">דחה</button></div></div>`).join("")
@@ -170,13 +170,12 @@ $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.
 window.setBudget=async(categoryId,name)=>{const value=prompt(`תקציב חודשי ל-${name}`);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const existing=state.budgets.find(b=>b.category_id===categoryId);const q=existing?sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id):sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount});const {error}=await q;if(error)return toast(error.message);await loadAll();};
 
 window.makeToken=async(memberId,name)=>{const {data,error}=await sb.functions.invoke("create-shortcut-token",{body:{memberId,label:`iPhone - ${name}`}});if(error||data?.error)return toast(data?.error||error.message);$("tokenValue").value=data.token;$("tokenDialog").showModal();};
-$("closeFamilyCodeDialog").onclick=()=>$("familyCodeDialog").close();
-$("copyFamilyCode").onclick=async()=>{await navigator.clipboard.writeText($("familyCodeValue").value);toast("קוד המשפחה הועתק");};
 $("rotateFamilyCode").onclick=async()=>{
   const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"rotate"}});
   if(error||data?.error)return toast(data?.error||error.message);
-  $("familyCodeValue").value=data.familyCode;
-  $("familyCodeDialog").showModal();
+  sessionStorage.setItem("familyCode", data.familyCode);
+  $("familyCodeHint").textContent=data.familyCode;
+  toast("קוד המשפחה עודכן");
   await loadAll();
 };
 
@@ -186,8 +185,8 @@ $("customFamilyCodeForm").onsubmit=async(e)=>{
   const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"set_code",code}});
   if(error||data?.error)return toast(data?.error||error.message);
   $("customFamilyCode").value="";
-  $("familyCodeValue").value=data.familyCode;
-  $("familyCodeDialog").showModal();
+  sessionStorage.setItem("familyCode", data.familyCode);
+  $("familyCodeHint").textContent=data.familyCode;
   toast("קוד המשפחה עודכן");
   await loadAll();
 };
