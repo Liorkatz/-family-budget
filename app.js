@@ -255,7 +255,6 @@ $("testTransaction").onclick=async()=>{
 function goToFixedExpenses(){
   goToFixedExpenses();
 }
-$("openFixedExpenses").onclick=goToFixedExpenses;
 $("fixedStatCard").onclick=()=>{
   openPage("settingsPage");
   $("fixedExpensesCard").open=true;
