@@ -185,8 +185,8 @@ function renderCategoryPie(){
       label:{
         show:true,
         position:"outside",
-        alignTo:"edge",
-        edgeDistance:18,
+        alignTo:"labelLine",
+        distanceToLabelLine:7,
         bleedMargin:4,
         width:126,
         overflow:"break",
@@ -200,10 +200,11 @@ function renderCategoryPie(){
       },
       labelLine:{
         show:true,
-        length:28,
-        length2:36,
-        minTurnAngle:35,
-        smooth:.12,
+        length:16,
+        length2:18,
+        minTurnAngle:90,
+        maxSurfaceAngle:80,
+        smooth:false,
         lineStyle:{color:"#7A8798",width:1.35}
       },
       labelLayout:params=>({
@@ -320,7 +321,7 @@ function renderFixedPreview(){
 }
 $("fixedDesc").oninput=renderFixedPreview;
 $("fixedValue").oninput=renderFixedPreview;
-$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.max(100,...state.fixed.map(x=>Number(x.display_order)||0))+1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();renderFixedPreview();await loadAll();};
+$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();renderFixedPreview();await loadAll();};
 window.saveFixed=async(id)=>{const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);toast("ההוצאה עודכנה");await loadAll();};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
