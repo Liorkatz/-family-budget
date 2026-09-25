@@ -11,6 +11,7 @@ const escapeHtml = (v="") => String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"
 
 let authMode = "login";
 let categoryPieChart = null;
+let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
@@ -145,43 +146,51 @@ function renderCategoryPie(){
   const entries=Object.entries(byCat).sort((x,y)=>y[1]-x[1]);
 
   if(!entries.length){
+    selectedCategoryIndex=null;
     if(categoryPieChart){categoryPieChart.dispose();categoryPieChart=null;}
     container.innerHTML='<div class="empty-state chart-empty">אין עדיין עסקאות</div>';
     return;
   }
 
-  container.innerHTML="";
+  if(selectedCategoryIndex!==null && !entries[selectedCategoryIndex]) selectedCategoryIndex=null;
+
   const total=entries.reduce((sum,[,value])=>sum+value,0);
   const data=entries.map(([name,value],index)=>({
-    name,value,
+    name,
+    value,
+    selected:index===selectedCategoryIndex,
     itemStyle:{
       color:PIE_COLORS[index%PIE_COLORS.length],
-      borderColor:"#F8FAFC",
-      borderWidth:4,
-      borderRadius:8,
-      shadowBlur:7,
-      shadowOffsetY:3,
-      shadowColor:"rgba(25,35,55,.12)"
+      borderColor:"rgba(8,12,20,.88)",
+      borderWidth:3,
+      borderRadius:9,
+      shadowBlur:index===selectedCategoryIndex?22:10,
+      shadowOffsetY:index===selectedCategoryIndex?8:4,
+      shadowColor:index===selectedCategoryIndex?"rgba(0,0,0,.52)":"rgba(0,0,0,.24)",
+      opacity:selectedCategoryIndex===null||index===selectedCategoryIndex?1:.38
     }
   }));
 
   if(categoryPieChart) categoryPieChart.dispose();
+  container.innerHTML="";
   categoryPieChart=echarts.init(container);
 
+  const centerTitle=selectedCategoryIndex===null?"סה״כ":data[selectedCategoryIndex].name;
+  const centerValue=selectedCategoryIndex===null?money(total):money(data[selectedCategoryIndex].value);
+
   categoryPieChart.setOption({
-    animationDuration:700,
+    animationDuration:650,
     animationEasing:"cubicOut",
     tooltip:{show:false},
     series:[{
       type:"pie",
-      radius:["27%","44%"],
+      radius:["27%","45%"],
       center:["50%","48%"],
       startAngle:110,
-      selectedMode:false,
-      selectedOffset:0,
+      selectedMode:"single",
+      selectedOffset:11,
       minAngle:4,
       avoidLabelOverlap:true,
-      itemStyle:{borderRadius:8},
       label:{
         show:true,
         position:"outside",
@@ -191,7 +200,7 @@ function renderCategoryPie(){
         bleedMargin:2,
         width:116,
         overflow:"break",
-        color:"#273247",
+        color:"#EAF0FA",
         formatter:p=>`${p.name}\n${money(p.value)}`,
         fontWeight:700,
         fontSize:13,
@@ -200,45 +209,45 @@ function renderCategoryPie(){
       labelLine:{
         show:true,
         length:24,
-        length2:14,
+        length2:15,
         minTurnAngle:80,
         maxSurfaceAngle:80,
         smooth:false,
-        lineStyle:{color:"#91A0B5",width:1.5}
+        lineStyle:{color:"#93A3BA",width:1.55}
       },
       labelLayout:params=>{
         const points=params.labelLinePoints;
-        if(!points||points.length<3) return {hideOverlap:false,draggable:false};
+        if(!points||points.length<3)return{hideOverlap:false,draggable:false};
         const cx=container.clientWidth*.50;
         const cy=container.clientHeight*.48;
         const dx=points[0][0]-cx;
         const dy=points[0][1]-cy;
         const d=Math.hypot(dx,dy)||1;
-        const outerRadius=Math.min(container.clientWidth,container.clientHeight)*.22;
-        const overlapRadius=Math.max(0,outerRadius-7);
-        points[0]=[cx+(dx/d)*overlapRadius,cy+(dy/d)*overlapRadius];
-        return {labelLinePoints:points,hideOverlap:false,draggable:false};
+        const r=Math.min(container.clientWidth,container.clientHeight)*.225-5;
+        points[0]=[cx+(dx/d)*r,cy+(dy/d)*r];
+        return{labelLinePoints:points,hideOverlap:false,draggable:false};
       },
       emphasis:{
         scale:true,
-        scaleSize:14,
-        label:{fontSize:14,fontWeight:800,lineHeight:20},
-        itemStyle:{
-          shadowBlur:28,
-          shadowOffsetY:12,
-          shadowColor:"rgba(0,0,0,.55)"
-        }
+        scaleSize:13,
+        label:{color:"#FFFFFF",fontSize:16,fontWeight:900,lineHeight:22},
+        labelLine:{lineStyle:{color:"#FFFFFF",width:2}},
+        itemStyle:{shadowBlur:28,shadowOffsetY:10,shadowColor:"rgba(0,0,0,.55)"}
       },
       data
     }],
     graphic:[
-      {type:"text",left:"center",top:"40.5%",style:{text:"סה״כ",fill:"#7B8798",fontSize:12,fontWeight:600}},
-      {type:"text",left:"center",top:"48%",style:{text:money(total),fill:"#1A2435",fontSize:22,fontWeight:800}}
+      {type:"text",left:"center",top:"39.5%",style:{text:centerTitle,fill:selectedCategoryIndex===null?"#91A0B5":"#D9E3F2",fontSize:selectedCategoryIndex===null?12:14,fontWeight:700}},
+      {type:"text",left:"center",top:"48%",style:{text:centerValue,fill:"#FFFFFF",fontSize:24,fontWeight:900}}
     ]
-  });
+  },true);
 
   categoryPieChart.off("click");
-  setTimeout(()=>categoryPieChart?.resize(),50);
+  categoryPieChart.on("click",params=>{
+    selectedCategoryIndex=selectedCategoryIndex===params.dataIndex?null:params.dataIndex;
+    renderCategoryPie();
+  });
+  setTimeout(()=>categoryPieChart?.resize(),40);
 }
 
 function render(){
