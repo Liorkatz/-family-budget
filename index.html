@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
   <title>Family Budget</title>
-  <link rel="stylesheet" href="./styles.css?v=20260925-1505" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-1515" />
 </head>
 <body>
-  <div id="appVersion" class="version-badge">v1.0.1</div>
+  <div id="appVersion" class="version-badge">v1.0.2</div>
   <div id="toast" class="toast"></div>
 
   <main class="shell">
@@ -74,7 +74,7 @@
         <section class="stats-grid">
           <article class="stat-card"><span>הכנסות</span><strong id="incomeAmount">₪0</strong></article>
           <article class="stat-card"><span>הוצאות בפועל</span><strong id="spentAmount">₪0</strong></article>
-          <article class="stat-card"><span>קבועות החודש</span><strong id="fixedAmount">₪0</strong></article>
+          <article id="fixedStatCard" class="stat-card clickable-card" role="button" tabindex="0"><span>קבועות החודש</span><strong id="fixedAmount">₪0</strong></article>
           <article class="stat-card"><span>תחזית סוף חודש</span><strong id="forecastAmount">₪0</strong></article>
         </section>
 
@@ -134,7 +134,7 @@
           <div id="incomeList" class="settings-list"></div>
         </details>
 
-        <details class="settings-card">
+        <details id="fixedExpensesCard" class="settings-card">
           <summary>הוצאות קבועות</summary>
           <p class="muted compact">מלא רק את מה שרלוונטי. סעיף שלא בשימוש נשאר על 0.</p>
           <div id="fixedList" class="settings-list"></div>
@@ -187,6 +187,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
-  <script src="./app.js?v=20260925-1505"></script>
+  <script src="./app.js?v=20260925-1515"></script>
 </body>
 </html>
