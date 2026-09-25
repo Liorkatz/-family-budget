@@ -1504,3 +1504,90 @@ dialog::backdrop{
   font-size:12px;
   white-space:nowrap;
 }
+
+
+/* v1.0.35 - compact fixed expenses and categories rows */
+#fixedList .settings-row,
+#categoriesList .settings-row{
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  text-align:right;
+  gap:12px;
+  padding:10px 12px;
+  margin-bottom:6px;
+  min-height:58px;
+}
+
+#fixedList .settings-row > div:first-child,
+#categoriesList .settings-row > div:first-child{
+  flex:1 1 auto;
+  min-width:0;
+  text-align:right;
+}
+
+#fixedList .settings-row strong,
+#categoriesList .settings-row strong{
+  font-size:17px;
+  line-height:1.15;
+  text-align:right;
+}
+
+#fixedList .settings-row small,
+#categoriesList .settings-row small{
+  display:inline-block;
+  margin-top:2px;
+  font-size:12px;
+  text-align:right;
+}
+
+#fixedList .fixed-edit{
+  flex:0 0 auto;
+  width:auto;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+}
+
+#fixedList .fixed-edit input{
+  width:92px;
+  padding:7px 8px;
+  font-size:14px;
+  text-align:center;
+}
+
+#fixedList .mini-btn,
+#categoriesList .mini-btn{
+  padding:6px 8px;
+  border-radius:9px;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+#categoriesList .mini-actions{
+  flex:0 0 auto;
+  display:flex;
+  flex-wrap:nowrap;
+  justify-content:flex-start;
+  gap:6px;
+}
+
+@media(max-width:480px){
+  #fixedList .settings-row,
+  #categoriesList .settings-row{
+    padding:9px 10px;
+    min-height:54px;
+    gap:8px;
+  }
+
+  #fixedList .settings-row strong,
+  #categoriesList .settings-row strong{
+    font-size:16px;
+  }
+
+  #fixedList .fixed-edit input{
+    width:84px;
+  }
+}
