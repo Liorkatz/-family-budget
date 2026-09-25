@@ -247,6 +247,18 @@ function renderCategoryPie(){
     selectedCategoryIndex=selectedCategoryIndex===params.dataIndex?null:params.dataIndex;
     renderCategoryPie();
   });
+
+  if(!window.__categoryPieOutsideClickBound){
+    window.__categoryPieOutsideClickBound=true;
+    document.addEventListener("pointerdown",e=>{
+      if(selectedCategoryIndex===null)return;
+      const pie=$("categoryPie");
+      if(pie && pie.contains(e.target))return;
+      selectedCategoryIndex=null;
+      renderCategoryPie();
+    },{passive:true});
+  }
+
   setTimeout(()=>categoryPieChart?.resize(),40);
 }
 
