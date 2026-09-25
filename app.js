@@ -257,8 +257,9 @@ function render(){
 
   renderCategoryPie();
 
-  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div><div class="amount-negative">${money(t.amount)}</div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
+  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
+  bindTransactionLongPress($("recentTransactions"));
   renderTransactionSearch();
 
   $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="editMember('${m.id}','${escapeHtml(m.name)}')">ערוך</button>${m.id!==state.me.id?`<button class="mini-btn danger-btn" onclick="deleteMember('${m.id}','${escapeHtml(m.name)}')">מחק</button>`:""}<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">צור טוקן</button>`:""}</div></div>`).join("");
@@ -426,6 +427,79 @@ $("fixedStatCard").onclick=()=>{
   setTimeout(()=>$("fixedExpensesCard").scrollIntoView({behavior:"smooth",block:"start"}),50);
 };
 $("fixedStatCard").onkeydown=(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("fixedStatCard").click();}};
+async function editTransaction(id){
+  const t=state.transactions.find(x=>x.id===id);
+  if(!t)return;
+
+  const merchant=prompt("שם בית העסק",t.merchant||"");
+  if(merchant===null)return;
+
+  const amountText=prompt("סכום העסקה",String(t.amount??""));
+  if(amountText===null)return;
+  const amount=Number(amountText);
+  if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");
+
+  const memberText=prompt(
+    "בן משפחה:\n"+state.members.map((m,i)=>`${i+1}. ${m.name}`).join("\n"),
+    String(Math.max(1,state.members.findIndex(m=>m.id===t.member_id)+1))
+  );
+  if(memberText===null)return;
+  const member=state.members[Number(memberText)-1];
+  if(!member)return toast("בן משפחה לא תקין");
+
+  const categoryText=prompt(
+    "קטגוריה:\n0. ללא קטגוריה\n"+state.categories.map((c,i)=>`${i+1}. ${c.name}`).join("\n"),
+    String(Math.max(0,state.categories.findIndex(c=>c.id===t.category_id)+1))
+  );
+  if(categoryText===null)return;
+  let categoryId=null;
+  const catIndex=Number(categoryText);
+  if(catIndex!==0){
+    const category=state.categories[catIndex-1];
+    if(!category)return toast("קטגוריה לא תקינה");
+    categoryId=category.id;
+  }
+
+  const {error}=await sb.from("transactions").update({
+    merchant:merchant.trim()||null,
+    amount,
+    member_id:member.id,
+    category_id:categoryId
+  }).eq("id",id);
+  if(error)return toast(error.message);
+  toast("העסקה עודכנה");
+  await loadAll();
+}
+
+function bindTransactionLongPress(container){
+  if(!container)return;
+  container.querySelectorAll(".transaction-editable").forEach(row=>{
+    let timer=null, moved=false;
+    const start=()=>{
+      moved=false;
+      row.classList.add("holding");
+      timer=setTimeout(()=>{
+        timer=null;
+        row.classList.remove("holding");
+        if(!moved) editTransaction(row.dataset.txId);
+      },650);
+    };
+    const cancel=()=>{
+      if(timer){clearTimeout(timer);timer=null;}
+      row.classList.remove("holding");
+    };
+    row.addEventListener("touchstart",start,{passive:true});
+    row.addEventListener("touchmove",()=>{moved=true;cancel();},{passive:true});
+    row.addEventListener("touchend",cancel,{passive:true});
+    row.addEventListener("touchcancel",cancel,{passive:true});
+    row.addEventListener("mousedown",start);
+    row.addEventListener("mousemove",()=>{moved=true;cancel();});
+    row.addEventListener("mouseup",cancel);
+    row.addEventListener("mouseleave",cancel);
+    row.addEventListener("contextmenu",e=>{e.preventDefault();editTransaction(row.dataset.txId);});
+  });
+}
+
 function renderTransactionSearch(){
   const q=($("transactionSearch")?.value||"").trim().toLowerCase();
   let rows=state.transactions;
@@ -441,7 +515,8 @@ function renderTransactionSearch(){
       return hay.includes(q);
     });
   }
-  $("allTransactions").innerHTML=(rows.map(t=>`<div class="transaction-row"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div><div class="amount-negative">${money(t.amount)}</div></div>`).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
+  $("allTransactions").innerHTML=(rows.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div></div>`).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
+  bindTransactionLongPress($("allTransactions"));
   if($("transactionSearchMeta")){
     $("transactionSearchMeta").classList.toggle("hidden",!q);
     $("transactionSearchMeta").textContent=q?`${rows.length} תוצאות מתוך ${state.transactions.length}`:"";
