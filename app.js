@@ -11,7 +11,7 @@ const escapeHtml = (v="") => String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"
 
 let authMode = "login";
 let categoryPieChart = null;
-const PIE_COLORS=["#6F82F5","#8B5CF6","#06B6D4","#22C55E","#F59E0B","#EF4444","#EC4899","#84CC16","#14B8A6","#F97316"];
+const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
 function show(id){
@@ -156,12 +156,12 @@ function renderCategoryPie(){
     name,value,
     itemStyle:{
       color:PIE_COLORS[index%PIE_COLORS.length],
-      borderColor:"#0b1017",
-      borderWidth:3,
+      borderColor:"#F8FAFC",
+      borderWidth:4,
       borderRadius:8,
-      shadowBlur:18,
-      shadowOffsetY:8,
-      shadowColor:"rgba(0,0,0,.38)"
+      shadowBlur:7,
+      shadowOffsetY:3,
+      shadowColor:"rgba(25,35,55,.12)"
     }
   }));
 
@@ -174,44 +174,51 @@ function renderCategoryPie(){
     tooltip:{show:false},
     series:[{
       type:"pie",
-      radius:["26%","49%"],
-      center:["50%","50%"],
+      radius:["27%","44%"],
+      center:["50%","48%"],
       startAngle:110,
-      selectedMode:"single",
-      selectedOffset:16,
+      selectedMode:false,
+      selectedOffset:0,
       minAngle:4,
       avoidLabelOverlap:true,
       itemStyle:{borderRadius:8},
       label:{
         show:true,
         position:"outside",
-        alignTo:"labelLine",
-        distanceToLabelLine:7,
-        bleedMargin:4,
-        width:126,
+        alignTo:"edge",
+        edgeDistance:10,
+        distanceToLabelLine:4,
+        bleedMargin:2,
+        width:116,
         overflow:"break",
-        color:"#F3F6FA",
-        fontSize:11,
-        lineHeight:15,
+        color:"#273247",
         formatter:p=>`${p.name}\n${money(p.value)}`,
         fontWeight:700,
         fontSize:13,
-        lineHeight:19
+        lineHeight:20
       },
       labelLine:{
         show:true,
-        length:16,
-        length2:18,
-        minTurnAngle:90,
+        length:24,
+        length2:14,
+        minTurnAngle:80,
         maxSurfaceAngle:80,
         smooth:false,
-        lineStyle:{color:"#7A8798",width:1.35}
+        lineStyle:{color:"#91A0B5",width:1.5}
       },
-      labelLayout:params=>({
-        moveOverlap:"shiftY",
-        hideOverlap:false,
-        draggable:false
-      }),
+      labelLayout:params=>{
+        const points=params.labelLinePoints;
+        if(!points||points.length<3) return {hideOverlap:false,draggable:false};
+        const cx=container.clientWidth*.50;
+        const cy=container.clientHeight*.48;
+        const dx=points[0][0]-cx;
+        const dy=points[0][1]-cy;
+        const d=Math.hypot(dx,dy)||1;
+        const outerRadius=Math.min(container.clientWidth,container.clientHeight)*.22;
+        const overlapRadius=Math.max(0,outerRadius-7);
+        points[0]=[cx+(dx/d)*overlapRadius,cy+(dy/d)*overlapRadius];
+        return {labelLinePoints:points,hideOverlap:false,draggable:false};
+      },
       emphasis:{
         scale:true,
         scaleSize:14,
@@ -225,17 +232,12 @@ function renderCategoryPie(){
       data
     }],
     graphic:[
-      {type:"text",left:"center",top:"42%",style:{text:"סה״כ",fill:"#8793A3",fontSize:12,fontWeight:600}},
-      {type:"text",left:"center",top:"50%",style:{text:money(total),fill:"#F6F8FB",fontSize:22,fontWeight:800}}
+      {type:"text",left:"center",top:"40.5%",style:{text:"סה״כ",fill:"#7B8798",fontSize:12,fontWeight:600}},
+      {type:"text",left:"center",top:"48%",style:{text:money(total),fill:"#1A2435",fontSize:22,fontWeight:800}}
     ]
   });
 
   categoryPieChart.off("click");
-  categoryPieChart.on("click",params=>{
-    categoryPieChart.dispatchAction({type:"pieUnSelect",seriesIndex:0});
-    categoryPieChart.dispatchAction({type:"pieSelect",seriesIndex:0,dataIndex:params.dataIndex});
-  });
-
   setTimeout(()=>categoryPieChart?.resize(),50);
 }
 
