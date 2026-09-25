@@ -140,7 +140,7 @@ function render(){
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
   renderTransactionSearch();
 
-  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">צור טוקן</button>`:""}</div></div>`).join("");
+  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="editMember('${m.id}','${escapeHtml(m.name)}')">ערוך</button>${m.id!==state.me.id?`<button class="mini-btn danger-btn" onclick="deleteMember('${m.id}','${escapeHtml(m.name)}')">מחק</button>`:""}<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">צור טוקן</button>`:""}</div></div>`).join("");
 
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
@@ -151,7 +151,7 @@ function render(){
       ? pending.map(r=>`<div class="settings-row"><div><strong>${escapeHtml(r.display_name)}</strong><small>בקשת הצטרפות</small></div><div class="mini-actions"><button class="mini-btn approve" onclick="decideJoin('${r.id}','approve')">אשר</button><button class="mini-btn" onclick="decideJoin('${r.id}','reject')">דחה</button></div></div>`).join("")
       : '<div class="empty-state">אין בקשות הצטרפות ממתינות</div>';
   }
-  $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><strong>${money(x.amount)}</strong></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
+  $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי · ${money(x.amount)}</small></div><div class="mini-actions"><button class="mini-btn" onclick="editIncome('${x.id}')">ערוך</button><button class="mini-btn danger-btn" onclick="deleteIncome('${x.id}','${escapeHtml(x.description)}')">מחק</button></div></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
   $("fixedList").innerHTML=state.fixed.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
   $("categoriesList").innerHTML=state.categories.map(c=>{const b=state.budgets.find(x=>x.category_id===c.id);return `<div class="settings-row"><div><strong>${escapeHtml(c.name)}</strong><small>${b?"תקציב "+money(b.monthly_limit):"ללא תקציב"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="setBudget('${c.id}','${escapeHtml(c.name)}')">תקציב</button></div></div>`}).join("");
 
@@ -164,7 +164,49 @@ function render(){
 }
 
 $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
-$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.max(100,...state.fixed.map(x=>Number(x.display_order)||0))+1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value,amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
+
+window.editIncome=async(id)=>{
+  const item=state.incomes.find(x=>x.id===id); if(!item)return;
+  const description=prompt("תיאור ההכנסה",item.description); if(description===null)return;
+  const value=prompt("סכום חודשי",String(item.amount)); if(value===null)return;
+  const amount=Number(value); if(!description.trim()||!Number.isFinite(amount)||amount<0)return toast("פרטים לא תקינים");
+  const {error}=await sb.from("incomes").update({description:description.trim(),amount}).eq("id",id);
+  if(error)return toast(error.message); toast("ההכנסה עודכנה"); await loadAll();
+};
+window.deleteIncome=async(id,name)=>{
+  if(!confirm(`למחוק את ההכנסה "${name}"?`))return;
+  const {error}=await sb.from("incomes").delete().eq("id",id);
+  if(error)return toast(error.message); toast("ההכנסה נמחקה"); await loadAll();
+};
+
+window.editMember=async(id,currentName)=>{
+  const name=prompt("שם בן המשפחה",currentName); if(name===null)return;
+  if(!name.trim())return toast("השם לא יכול להיות ריק");
+  const {error}=await sb.from("members").update({name:name.trim()}).eq("id",id);
+  if(error)return toast(error.message);
+  if(id===state.me.id)state.me.name=name.trim();
+  toast("שם בן המשפחה עודכן"); await loadAll();
+};
+window.deleteMember=async(id,name)=>{
+  if(!confirm(`למחוק את ${name} מהמשפחה?`))return;
+  const {error}=await sb.from("members").delete().eq("id",id);
+  if(error){
+    if(String(error.message||"").toLowerCase().includes("foreign key")) return toast("לא ניתן למחוק בן משפחה שיש לו עסקאות");
+    return toast(error.message);
+  }
+  toast("בן המשפחה נמחק"); await loadAll();
+};
+function renderFixedPreview(){
+  const name=$("fixedDesc").value.trim();
+  const value=$("fixedValue").value;
+  const box=$("fixedPreview");
+  if(!name){box.classList.add("hidden");box.innerHTML="";return;}
+  box.classList.remove("hidden");
+  box.innerHTML=`<div class="preview-label">יופיע ברשימה כך:</div><div class="settings-row preview-row"><div><strong>${escapeHtml(name)}</strong><small>חודשי</small></div><strong>${value?money(Number(value)):money(0)}</strong></div>`;
+}
+$("fixedDesc").oninput=renderFixedPreview;
+$("fixedValue").oninput=renderFixedPreview;
+$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.max(100,...state.fixed.map(x=>Number(x.display_order)||0))+1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();renderFixedPreview();await loadAll();};
 window.saveFixed=async(id)=>{const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);toast("ההוצאה עודכנה");await loadAll();};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
@@ -253,7 +295,9 @@ $("testTransaction").onclick=async()=>{
   }
 };
 function goToFixedExpenses(){
-  goToFixedExpenses();
+  openPage("settingsPage");
+  $("fixedExpensesCard").open=true;
+  setTimeout(()=>$("fixedExpensesCard").scrollIntoView({behavior:"smooth",block:"start"}),50);
 }
 $("fixedStatCard").onclick=()=>{
   openPage("settingsPage");
