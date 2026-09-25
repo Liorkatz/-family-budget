@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
   <title>Family Budget</title>
-  <link rel="stylesheet" href="./styles.css?v=20260925-1625" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-1640" />
 </head>
 <body>
-  <div id="appVersion" class="version-badge">v1.0.7</div>
+  <div id="appVersion" class="version-badge">v1.0.8</div>
   <div id="toast" class="toast"></div>
 
   <main class="shell">
@@ -142,12 +142,13 @@
         <details id="fixedExpensesCard" class="settings-card">
           <summary>הוצאות קבועות</summary>
           <p class="muted compact">מלא רק את מה שרלוונטי. סעיף שלא בשימוש נשאר על 0.</p>
-          <div id="fixedList" class="settings-list"></div>
-          <form id="fixedForm" class="inline-form three">
-            <input id="fixedDesc" placeholder="הוצאה נוספת" required />
+          <form id="fixedForm" class="inline-form three fixed-add-form">
+            <input id="fixedDesc" placeholder="הוצאה קבועה נוספת" required />
             <input id="fixedValue" type="number" min="0" step="0.01" placeholder="סכום" required />
             <button class="small-btn" type="submit">הוסף</button>
           </form>
+          <div id="fixedPreview" class="fixed-preview hidden"></div>
+          <div id="fixedList" class="settings-list"></div>
         </details>
 
         <details class="settings-card">
@@ -192,6 +193,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
-  <script src="./app.js?v=20260925-1625"></script>
+  <script src="./app.js?v=20260925-1640"></script>
 </body>
 </html>
