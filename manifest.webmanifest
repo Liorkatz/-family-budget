@@ -1,0 +1,20 @@
+{
+  "name": "Family Budget",
+  "short_name": "Family Budget",
+  "description": "Family budget and expense management",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/-family-budget/",
+  "scope": "/-family-budget/",
+  "display": "standalone",
+  "background_color": "#060A11",
+  "theme_color": "#060A11",
+  "icons": [
+    {
+      "src": "/-family-budget/apple-touch-icon-v2.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
