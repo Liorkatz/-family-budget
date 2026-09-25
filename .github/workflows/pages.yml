@@ -25,6 +25,16 @@ jobs:
         uses: actions/checkout@v6
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Generate PWA icons
+        run: |
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from PIL import Image
+          img = Image.open("app-icon.png").convert("RGB")
+          for size in (180, 192, 512):
+              out = img.resize((size, size), Image.Resampling.LANCZOS)
+              out.save(f"icon-{size}.png", "PNG", optimize=True)
+          PY
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
