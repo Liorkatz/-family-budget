@@ -25,89 +25,14 @@ jobs:
         uses: actions/checkout@v6
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Generate PWA icons
+      - name: Generate icon sizes from selected master
         run: |
           python -m pip install --quiet pillow
           python - <<'PY'
-          from PIL import Image, ImageDraw, ImageFilter
-
-          S = 1024
-          img = Image.new("RGBA", (S, S), (3, 14, 34, 255))
-          d = ImageDraw.Draw(img)
-
-          # Full-bleed blue/teal background.
-          top = (4, 22, 55)
-          bottom = (0, 74, 98)
-          for y in range(S):
-              t = y / (S - 1)
-              c = tuple(round(top[i] * (1 - t) + bottom[i] * t) for i in range(3)) + (255,)
-              d.line((0, y, S, y), fill=c)
-
-          # Soft atmospheric glows.
-          glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-          g = ImageDraw.Draw(glow)
-          g.ellipse((80, -80, 700, 540), fill=(0, 150, 255, 115))
-          g.ellipse((420, 0, 1080, 650), fill=(54, 255, 155, 110))
-          g.ellipse((180, 450, 980, 1100), fill=(0, 200, 210, 75))
-          glow = glow.filter(ImageFilter.GaussianBlur(95))
-          img = Image.alpha_composite(img, glow)
-
-          # Large family figures.
-          people_glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-          pg = ImageDraw.Draw(people_glow)
-          pg.ellipse((175, 140, 405, 370), fill=(72, 231, 255, 150))
-          pg.ellipse((235, 295, 540, 675), fill=(41, 183, 255, 135))
-          pg.ellipse((500, 95, 770, 365), fill=(103, 255, 171, 155))
-          pg.ellipse((420, 265, 820, 690), fill=(51, 235, 168, 145))
-          people_glow = people_glow.filter(ImageFilter.GaussianBlur(45))
-          img = Image.alpha_composite(img, people_glow)
-
-          d = ImageDraw.Draw(img)
-          # rear figure
-          d.ellipse((205, 165, 380, 340), fill=(113, 236, 255, 255), outline=(205, 250, 255, 240), width=9)
-          d.ellipse((230, 305, 540, 675), fill=(20, 150, 232, 255), outline=(132, 234, 255, 220), width=10)
-          # front figure
-          d.ellipse((525, 120, 735, 330), fill=(144, 255, 181, 255), outline=(221, 255, 233, 245), width=10)
-          d.ellipse((425, 275, 825, 690), fill=(37, 220, 156, 255), outline=(163, 255, 205, 235), width=11)
-
-          # Coin glow.
-          coin_glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-          cg = ImageDraw.Draw(coin_glow)
-          cg.rectangle((70, 565, 925, 970), fill=(116, 255, 80, 95))
-          coin_glow = coin_glow.filter(ImageFilter.GaussianBlur(55))
-          img = Image.alpha_composite(img, coin_glow)
-          d = ImageDraw.Draw(img)
-
-          def stack(x1, x2, y_bottom, count, step, h):
-              for i in range(count):
-                  y2 = y_bottom - i * step
-                  y1 = y2 - h
-                  d.rounded_rectangle((x1, y1, x2, y2), radius=22,
-                                      fill=(91, 218, 67, 255),
-                                      outline=(196, 255, 150, 255), width=7)
-                  d.ellipse((x1, y1-24, x2, y1+28),
-                            fill=(169, 255, 115, 255),
-                            outline=(227, 255, 199, 255), width=7)
-                  d.arc((x1+6, y2-35, x2-6, y2+15), 0, 180,
-                        fill=(38, 133, 72, 255), width=5)
-
-          # Large, edge-filling stacks.
-          stack(72, 435, 900, 4, 78, 72)
-          stack(420, 925, 925, 5, 78, 76)
-
-          # glossy highlights
-          hi = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-          hd = ImageDraw.Draw(hi)
-          hd.arc((26, 20, 990, 995), 195, 300, fill=(255, 255, 255, 70), width=20)
-          hd.ellipse((530, 128, 630, 185), fill=(255, 255, 255, 60))
-          hd.ellipse((220, 175, 295, 220), fill=(255, 255, 255, 45))
-          hi = hi.filter(ImageFilter.GaussianBlur(6))
-          img = Image.alpha_composite(img, hi)
-
-          # Export exact icon sizes and verify them.
-          rgb = img.convert("RGB")
-          for size in (180, 192, 512):
-              out = rgb.resize((size, size), Image.Resampling.LANCZOS)
+          from PIL import Image
+          src = Image.open("app-icon-master-v45.png").convert("RGB")
+          for size in (64, 180, 192, 512):
+              out = src.resize((size, size), Image.Resampling.LANCZOS)
               path = f"icon-{size}.png"
               out.save(path, "PNG", optimize=True)
               verify = Image.open(path)
