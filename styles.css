@@ -1457,3 +1457,50 @@ dialog::backdrop{
   border-color:rgba(255,255,255,.07);
   box-shadow:none;
 }
+
+
+/* v1.0.34 - compact family members rows */
+#membersList .settings-row{
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  text-align:right;
+  gap:12px;
+  padding:10px 12px;
+  margin-bottom:6px;
+  min-height:58px;
+}
+
+#membersList .settings-row > div:first-child{
+  flex:1 1 auto;
+  min-width:0;
+  text-align:right;
+}
+
+#membersList .settings-row strong{
+  font-size:17px;
+  line-height:1.15;
+  text-align:right;
+}
+
+#membersList .settings-row small{
+  display:inline-block;
+  margin-top:2px;
+  font-size:12px;
+  text-align:right;
+}
+
+#membersList .mini-actions{
+  flex:0 0 auto;
+  display:flex;
+  flex-wrap:nowrap;
+  justify-content:flex-start;
+  gap:6px;
+}
+
+#membersList .mini-btn{
+  padding:6px 8px;
+  border-radius:9px;
+  font-size:12px;
+  white-space:nowrap;
+}
