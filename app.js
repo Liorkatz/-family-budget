@@ -174,7 +174,7 @@ function renderCategoryPie(){
     tooltip:{show:false},
     series:[{
       type:"pie",
-      radius:["28%","53%"],
+      radius:["26%","49%"],
       center:["50%","50%"],
       startAngle:110,
       selectedMode:"single",
@@ -186,23 +186,22 @@ function renderCategoryPie(){
         show:true,
         position:"outside",
         alignTo:"edge",
-        edgeDistance:8,
+        edgeDistance:18,
         bleedMargin:4,
-        width:118,
+        width:126,
         overflow:"break",
         color:"#F3F6FA",
         fontSize:11,
         lineHeight:15,
-        formatter:p=>`{name|${p.name}}\n{value|${money(p.value)}}`,
-        rich:{
-          name:{fontWeight:750,color:"#F4F7FB",fontSize:11,lineHeight:16,align:"center"},
-          value:{fontWeight:850,color:"#AEB9C8",fontSize:11,lineHeight:17,align:"center"}
-        }
+        formatter:p=>`${p.name}\n${money(p.value)}`,
+        fontWeight:700,
+        fontSize:13,
+        lineHeight:19
       },
       labelLine:{
         show:true,
-        length:24,
-        length2:30,
+        length:28,
+        length2:36,
         minTurnAngle:35,
         smooth:.12,
         lineStyle:{color:"#7A8798",width:1.35}
@@ -215,7 +214,7 @@ function renderCategoryPie(){
       emphasis:{
         scale:true,
         scaleSize:14,
-        label:{fontSize:11,fontWeight:700},
+        label:{fontSize:14,fontWeight:800,lineHeight:20},
         itemStyle:{
           shadowBlur:28,
           shadowOffsetY:12,
