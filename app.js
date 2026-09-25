@@ -95,7 +95,10 @@ $("joinFamilyForm").onsubmit=async(e)=>{
 
 async function logout(){ await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[],adminInfo:null}; show("authView"); }
 $("logoutBtn").onclick=logout; $("bootstrapLogout").onclick=logout;
-$("appVersion").onclick=()=>location.reload();
+$("appVersion").onclick=()=>{
+  sessionStorage.setItem("showRefreshToast","1");
+  location.reload();
+};
 
 function openPage(pageId){
   document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
@@ -173,8 +176,8 @@ function renderCategoryPie(){
     },
     series:[{
       type:"pie",
-      radius:["34%","64%"],
-      center:["50%","49%"],
+      radius:["29%","55%"],
+      center:["50%","50%"],
       startAngle:110,
       selectedMode:"single",
       selectedOffset:16,
@@ -185,32 +188,36 @@ function renderCategoryPie(){
         show:true,
         position:"outside",
         alignTo:"edge",
-        edgeDistance:12,
-        bleedMargin:6,
+        edgeDistance:8,
+        bleedMargin:4,
+        width:112,
+        overflow:"break",
         color:"#F3F6FA",
         fontSize:11,
-        lineHeight:16,
+        lineHeight:15,
         formatter:p=>`{name|${p.name}}\n{value|${money(p.value)}}`,
         rich:{
-          name:{fontWeight:700,color:"#F3F6FA",fontSize:11},
-          value:{fontWeight:800,color:"#B9C4D2",fontSize:11}
+          name:{fontWeight:700,color:"#F3F6FA",fontSize:11,lineHeight:15},
+          value:{fontWeight:800,color:"#B9C4D2",fontSize:11,lineHeight:15}
         }
       },
       labelLine:{
         show:true,
-        length:16,
-        length2:18,
-        smooth:.18,
-        lineStyle:{color:"#657286",width:1.2}
+        length:22,
+        length2:26,
+        minTurnAngle:35,
+        smooth:.12,
+        lineStyle:{color:"#7A8798",width:1.35}
       },
-      labelLayout:{
+      labelLayout:params=>({
         moveOverlap:"shiftY",
-        hideOverlap:false
-      },
+        hideOverlap:false,
+        draggable:false
+      }),
       emphasis:{
         scale:true,
         scaleSize:14,
-        label:{fontSize:12},
+        label:{fontSize:11,fontWeight:700},
         itemStyle:{
           shadowBlur:28,
           shadowOffsetY:12,
