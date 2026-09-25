@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
   <title>Family Budget</title>
-  <link rel="stylesheet" href="./styles.css?v=20260925-1640" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-1700" />
 </head>
 <body>
-  <div id="appVersion" class="version-badge">v1.0.8</div>
+  <div id="appVersion" class="version-badge">v1.0.9</div>
   <div id="toast" class="toast"></div>
 
   <main class="shell">
@@ -80,7 +80,10 @@
 
         <section class="panel">
           <div class="panel-head"><div><p class="eyebrow">חלוקה</p><h2>קטגוריות</h2></div></div>
-          <div id="categoryBars" class="category-list empty-state">אין עדיין עסקאות</div>
+          <div class="category-chart-wrap">
+            <div id="categoryPie" class="category-pie"></div>
+            <div id="categoryLegend" class="category-legend"></div>
+          </div>
         </section>
 
         <section class="panel">
@@ -191,8 +194,9 @@
     </div>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
-  <script src="./app.js?v=20260925-1640"></script>
+  <script src="./app.js?v=20260925-1700"></script>
 </body>
 </html>
