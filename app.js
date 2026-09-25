@@ -222,6 +222,10 @@ $("testTransaction").onclick=async()=>{
   toast("עסקת בדיקה של ₪12.34 נוספה");
   await loadAll();
 };
+function goToFixedExpenses(){
+  goToFixedExpenses();
+}
+$("openFixedExpenses").onclick=goToFixedExpenses;
 $("fixedStatCard").onclick=()=>{
   openPage("settingsPage");
   $("fixedExpensesCard").open=true;
