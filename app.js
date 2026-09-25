@@ -127,8 +127,8 @@ async function loadAll(){
 }
 
 function renderCategoryPie(){
-  const container=$("categoryPie"), legend=$("categoryLegend");
-  if(!container||!legend||!window.echarts)return;
+  const container=$("categoryPie");
+  if(!container||!window.echarts)return;
 
   const byCat={};
   state.transactions.forEach(t=>{
@@ -140,7 +140,6 @@ function renderCategoryPie(){
   if(!entries.length){
     if(categoryPieChart){categoryPieChart.dispose();categoryPieChart=null;}
     container.innerHTML='<div class="empty-state chart-empty">אין עדיין עסקאות</div>';
-    legend.innerHTML="";
     return;
   }
 
@@ -174,17 +173,44 @@ function renderCategoryPie(){
     },
     series:[{
       type:"pie",
-      radius:["38%","74%"],
-      center:["50%","48%"],
+      radius:["34%","64%"],
+      center:["50%","49%"],
       startAngle:110,
       selectedMode:"single",
       selectedOffset:16,
       minAngle:4,
+      avoidLabelOverlap:true,
       itemStyle:{borderRadius:8},
-      label:{show:false},
+      label:{
+        show:true,
+        position:"outside",
+        alignTo:"edge",
+        edgeDistance:12,
+        bleedMargin:6,
+        color:"#F3F6FA",
+        fontSize:11,
+        lineHeight:16,
+        formatter:p=>`{name|${p.name}}\n{value|${money(p.value)}}`,
+        rich:{
+          name:{fontWeight:700,color:"#F3F6FA",fontSize:11},
+          value:{fontWeight:800,color:"#B9C4D2",fontSize:11}
+        }
+      },
+      labelLine:{
+        show:true,
+        length:16,
+        length2:18,
+        smooth:.18,
+        lineStyle:{color:"#657286",width:1.2}
+      },
+      labelLayout:{
+        moveOverlap:"shiftY",
+        hideOverlap:false
+      },
       emphasis:{
         scale:true,
         scaleSize:14,
+        label:{fontSize:12},
         itemStyle:{
           shadowBlur:28,
           shadowOffsetY:12,
@@ -194,8 +220,8 @@ function renderCategoryPie(){
       data
     }],
     graphic:[
-      {type:"text",left:"center",top:"41%",style:{text:"סה״כ",fill:"#8793A3",fontSize:12,fontWeight:600}},
-      {type:"text",left:"center",top:"49%",style:{text:money(total),fill:"#F6F8FB",fontSize:23,fontWeight:800}}
+      {type:"text",left:"center",top:"42%",style:{text:"סה״כ",fill:"#8793A3",fontSize:12,fontWeight:600}},
+      {type:"text",left:"center",top:"50%",style:{text:money(total),fill:"#F6F8FB",fontSize:22,fontWeight:800}}
     ]
   });
 
@@ -203,26 +229,7 @@ function renderCategoryPie(){
   categoryPieChart.on("click",params=>{
     categoryPieChart.dispatchAction({type:"pieUnSelect",seriesIndex:0});
     categoryPieChart.dispatchAction({type:"pieSelect",seriesIndex:0,dataIndex:params.dataIndex});
-  });
-
-  legend.innerHTML=entries.map(([name,value],index)=>{
-    const pct=total?Math.round(value/total*100):0;
-    return `<button class="category-legend-row" type="button" data-cat-index="${index}">
-      <span class="category-legend-main">
-        <span class="category-dot" style="background:${PIE_COLORS[index%PIE_COLORS.length]}"></span>
-        <span><strong>${escapeHtml(name)}</strong><small>${pct}%</small></span>
-      </span>
-      <strong>${money(value)}</strong>
-    </button>`;
-  }).join("");
-
-  legend.querySelectorAll("[data-cat-index]").forEach(btn=>{
-    btn.onclick=()=>{
-      const idx=Number(btn.dataset.catIndex);
-      categoryPieChart.dispatchAction({type:"pieUnSelect",seriesIndex:0});
-      categoryPieChart.dispatchAction({type:"pieSelect",seriesIndex:0,dataIndex:idx});
-      categoryPieChart.dispatchAction({type:"showTip",seriesIndex:0,dataIndex:idx});
-    };
+    categoryPieChart.dispatchAction({type:"showTip",seriesIndex:0,dataIndex:params.dataIndex});
   });
 
   setTimeout(()=>categoryPieChart?.resize(),50);
