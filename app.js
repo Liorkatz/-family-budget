@@ -200,6 +200,23 @@ window.decideJoin=async(requestId,action)=>{
 $("closeTokenDialog").onclick=()=>$("tokenDialog").close();
 $("copyToken").onclick=async()=>{await navigator.clipboard.writeText($("tokenValue").value);toast("ה־Token הועתק");};
 
+$("testTransaction").onclick=async()=>{
+  const payload={
+    family_id:state.family.id,
+    member_id:state.me.id,
+    category_id:null,
+    amount:12.34,
+    currency:"ILS",
+    merchant:"TEST - Shortcut Simulation",
+    source:"apple_pay",
+    occurred_at:new Date().toISOString(),
+    external_id:"test-"+Date.now()
+  };
+  const {error}=await sb.from("transactions").insert(payload);
+  if(error)return toast(error.message);
+  toast("עסקת בדיקה של ₪12.34 נוספה");
+  await loadAll();
+};
 $("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
 $("closeTransactionDialog").onclick=()=>$("transactionDialog").close();
 $("transactionForm").onsubmit=async(e)=>{e.preventDefault();const payload={family_id:state.family.id,member_id:$("txMember").value,category_id:$("txCategory").value||null,amount:Number($("txAmount").value),merchant:$("txMerchant").value.trim()||null,source:"manual"};const {error}=await sb.from("transactions").insert(payload);if(error)return toast(error.message);$("transactionDialog").close();e.target.reset();await loadAll();};
