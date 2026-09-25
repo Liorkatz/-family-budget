@@ -389,3 +389,9 @@ dialog::backdrop{
     transform:translateX(-50%);
   }
 }
+
+/* v1.0.16 pie label spacing */
+.category-pie{height:500px}
+@media(max-width:420px){
+  .category-pie{height:520px}
+}
