@@ -31,78 +31,89 @@ jobs:
           python - <<'PY'
           from PIL import Image, ImageDraw, ImageFilter
 
-          S = 512
-          img = Image.new("RGB", (S, S), "#061425")
-          px = img.load()
+          S = 1024
+          img = Image.new("RGBA", (S, S), (3, 14, 34, 255))
+          d = ImageDraw.Draw(img)
 
-          # Full-bleed navy -> teal background.
+          # Full-bleed blue/teal background.
+          top = (4, 22, 55)
+          bottom = (0, 74, 98)
           for y in range(S):
-              for x in range(S):
-                  tx = x / (S - 1)
-                  ty = y / (S - 1)
-                  # dark navy base with cyan/green lift to top-right
-                  r = int(4 + 2*tx + 0*ty)
-                  g = int(20 + 42*tx + 10*(1-ty))
-                  b = int(37 + 44*(1-tx) + 18*(1-ty))
-                  px[x, y] = (min(r,255), min(g,255), min(b,255))
+              t = y / (S - 1)
+              c = tuple(round(top[i] * (1 - t) + bottom[i] * t) for i in range(3)) + (255,)
+              d.line((0, y, S, y), fill=c)
 
-          # Soft neon glows.
-          glow = Image.new("RGBA", (S, S), (0,0,0,0))
-          gd = ImageDraw.Draw(glow)
-          gd.ellipse((260,-80,620,280), fill=(0,255,170,85))
-          gd.ellipse((-120,-70,260,300), fill=(0,130,255,75))
-          gd.ellipse((120,300,560,650), fill=(0,220,190,55))
-          glow = glow.filter(ImageFilter.GaussianBlur(75))
-          img = Image.alpha_composite(img.convert("RGBA"), glow)
+          # Soft atmospheric glows.
+          glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+          g = ImageDraw.Draw(glow)
+          g.ellipse((80, -80, 700, 540), fill=(0, 150, 255, 115))
+          g.ellipse((420, 0, 1080, 650), fill=(54, 255, 155, 110))
+          g.ellipse((180, 450, 980, 1100), fill=(0, 200, 210, 75))
+          glow = glow.filter(ImageFilter.GaussianBlur(95))
+          img = Image.alpha_composite(img, glow)
 
-          art = Image.new("RGBA", (S, S), (0,0,0,0))
-          d = ImageDraw.Draw(art)
+          # Large family figures.
+          people_glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+          pg = ImageDraw.Draw(people_glow)
+          pg.ellipse((175, 140, 405, 370), fill=(72, 231, 255, 150))
+          pg.ellipse((235, 295, 540, 675), fill=(41, 183, 255, 135))
+          pg.ellipse((500, 95, 770, 365), fill=(103, 255, 171, 155))
+          pg.ellipse((420, 265, 820, 690), fill=(51, 235, 168, 145))
+          people_glow = people_glow.filter(ImageFilter.GaussianBlur(45))
+          img = Image.alpha_composite(img, people_glow)
 
-          # Family silhouettes.
-          # Adult
-          d.ellipse((288,62,438,212), fill=(60,244,205,255), outline=(214,255,246,255), width=9)
-          d.rounded_rectangle((244,194,455,372), radius=90, fill=(20,188,186,255), outline=(160,255,232,230), width=8)
-          # Child
-          d.ellipse((135,157,238,260), fill=(43,176,255,255), outline=(220,248,255,255), width=8)
-          d.rounded_rectangle((101,242,278,390), radius=73, fill=(24,123,223,255), outline=(153,225,255,220), width=7)
+          d = ImageDraw.Draw(img)
+          # rear figure
+          d.ellipse((205, 165, 380, 340), fill=(113, 236, 255, 255), outline=(205, 250, 255, 240), width=9)
+          d.ellipse((230, 305, 540, 675), fill=(20, 150, 232, 255), outline=(132, 234, 255, 220), width=10)
+          # front figure
+          d.ellipse((525, 120, 735, 330), fill=(144, 255, 181, 255), outline=(221, 255, 233, 245), width=10)
+          d.ellipse((425, 275, 825, 690), fill=(37, 220, 156, 255), outline=(163, 255, 205, 235), width=11)
 
-          # Curved "embrace" ribbon.
-          d.line([(388,242),(338,290),(278,329),(226,352)], fill=(41,222,217,255), width=42, joint="curve")
+          # Coin glow.
+          coin_glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+          cg = ImageDraw.Draw(coin_glow)
+          cg.rectangle((70, 565, 925, 970), fill=(116, 255, 80, 95))
+          coin_glow = coin_glow.filter(ImageFilter.GaussianBlur(55))
+          img = Image.alpha_composite(img, coin_glow)
+          d = ImageDraw.Draw(img)
 
-          # Coin stacks - left small, right tall.
-          def coin_stack(cx, y_bottom, width, layers, h, gap, body, top, edge):
-              for i in range(layers):
-                  y = y_bottom - i*(h+gap)
-                  x0 = cx - width//2
-                  x1 = cx + width//2
-                  # body
-                  d.rounded_rectangle((x0, y-h, x1, y), radius=h//2, fill=body, outline=edge, width=5)
-                  # top lip
-                  d.ellipse((x0, y-h-10, x1, y-h+16), fill=top, outline=(225,255,248,255), width=5)
+          def stack(x1, x2, y_bottom, count, step, h):
+              for i in range(count):
+                  y2 = y_bottom - i * step
+                  y1 = y2 - h
+                  d.rounded_rectangle((x1, y1, x2, y2), radius=22,
+                                      fill=(91, 218, 67, 255),
+                                      outline=(196, 255, 150, 255), width=7)
+                  d.ellipse((x1, y1-24, x2, y1+28),
+                            fill=(169, 255, 115, 255),
+                            outline=(227, 255, 199, 255), width=7)
+                  d.arc((x1+6, y2-35, x2-6, y2+15), 0, 180,
+                        fill=(38, 133, 72, 255), width=5)
 
-          coin_stack(178, 445, 170, 2, 46, 10, (24,159,205,255), (74,235,205,255), (93,238,255,255))
-          coin_stack(350, 456, 192, 4, 43, 7, (17,174,139,255), (91,236,175,255), (184,255,221,255))
+          # Large, edge-filling stacks.
+          stack(72, 435, 900, 4, 78, 72)
+          stack(420, 925, 925, 5, 78, 76)
 
-          # Highlights.
-          hi = Image.new("RGBA", (S,S), (0,0,0,0))
+          # glossy highlights
+          hi = Image.new("RGBA", (S, S), (0, 0, 0, 0))
           hd = ImageDraw.Draw(hi)
-          hd.arc((294,66,432,204), 205, 305, fill=(255,255,255,180), width=10)
-          hd.arc((142,163,233,254), 205, 305, fill=(255,255,255,170), width=8)
-          hd.arc((106,248,275,386), 190, 275, fill=(255,255,255,90), width=7)
-          art = Image.alpha_composite(art, hi.filter(ImageFilter.GaussianBlur(1.2)))
+          hd.arc((26, 20, 990, 995), 195, 300, fill=(255, 255, 255, 70), width=20)
+          hd.ellipse((530, 128, 630, 185), fill=(255, 255, 255, 60))
+          hd.ellipse((220, 175, 295, 220), fill=(255, 255, 255, 45))
+          hi = hi.filter(ImageFilter.GaussianBlur(6))
+          img = Image.alpha_composite(img, hi)
 
-          # Neon glow behind art.
-          blurred = art.filter(ImageFilter.GaussianBlur(18))
-          img = Image.alpha_composite(img, blurred)
-          img = Image.alpha_composite(img, art).convert("RGB")
-
+          # Export exact icon sizes and verify them.
+          rgb = img.convert("RGB")
           for size in (180, 192, 512):
-              out = img.resize((size, size), Image.Resampling.LANCZOS)
-              out.save(f"icon-{size}.png", "PNG", optimize=True)
-              chk = Image.open(f"icon-{size}.png")
-              chk.load()
-              assert chk.size == (size, size)
-              print(f"Generated valid icon-{size}.png")
+              out = rgb.resize((size, size), Image.Resampling.LANCZOS)
+              path = f"icon-{size}.png"
+              out.save(path, "PNG", optimize=True)
+              verify = Image.open(path)
+              verify.load()
+              assert verify.size == (size, size)
+              print(f"Generated {path}: {verify.size}")
           PY
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
