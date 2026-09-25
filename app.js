@@ -218,14 +218,52 @@ function renderCategoryPie(){
       labelLayout:params=>{
         const points=params.labelLinePoints;
         if(!points||points.length<3)return{hideOverlap:false,draggable:false};
-        const cx=container.clientWidth*.50;
-        const cy=container.clientHeight*.48;
+
+        const w=container.clientWidth;
+        const h=container.clientHeight;
+        const cx=w*.50;
+        const cy=h*.48;
+
         const dx=points[0][0]-cx;
         const dy=points[0][1]-cy;
         const d=Math.hypot(dx,dy)||1;
-        const r=Math.min(container.clientWidth,container.clientHeight)*.225-5;
+        const r=Math.min(w,h)*.225-5;
         points[0]=[cx+(dx/d)*r,cy+(dy/d)*r];
-        return{labelLinePoints:points,hideOverlap:false,draggable:false};
+
+        const slices=data.map((item,index)=>{
+          const before=data.slice(0,index).reduce((s,x)=>s+Number(x.value||0),0);
+          const sweep=(Number(item.value||0)/total)*360;
+          const mid=110-((before/total)*360)-(sweep/2);
+          const rad=mid*Math.PI/180;
+          return{
+            index,
+            side:Math.cos(rad)>=0?"right":"left",
+            naturalY:cy-Math.sin(rad)*r
+          };
+        });
+
+        const current=slices[params.dataIndex];
+        const sameSide=slices
+          .filter(x=>x.side===current.side)
+          .sort((a,b)=>a.naturalY-b.naturalY);
+
+        const rank=sameSide.findIndex(x=>x.index===params.dataIndex);
+        const top=54;
+        const bottom=h-58;
+        const slot=sameSide.length<=1
+          ? (top+bottom)/2
+          : top+(rank*(bottom-top)/(sameSide.length-1));
+
+        const labelH=params.labelRect?.height||40;
+        points[1][1]=slot;
+        points[2][1]=slot;
+
+        return{
+          y:slot-(labelH/2),
+          labelLinePoints:points,
+          hideOverlap:false,
+          draggable:false
+        };
       },
       emphasis:{
         scale:true,
