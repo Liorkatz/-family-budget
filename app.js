@@ -28,6 +28,10 @@ async function currentMembership(){
 
 async function init(){
   $("monthTitle").textContent = monthName();
+  if(sessionStorage.getItem("showRefreshToast")==="1"){
+    sessionStorage.removeItem("showRefreshToast");
+    setTimeout(()=>toast("בוצע עדכון"),250);
+  }
   const {data:{session}} = await sb.auth.getSession();
   if(!session){ show("authView"); return; }
   try{
