@@ -10,6 +10,8 @@ const toast = (msg) => { $("toast").textContent=msg; $("toast").classList.add("s
 const escapeHtml = (v="") => String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
 
 let authMode = "login";
+let categoryPieChart = null;
+const PIE_COLORS=["#6F82F5","#8B5CF6","#06B6D4","#22C55E","#F59E0B","#EF4444","#EC4899","#84CC16","#14B8A6","#F97316"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
 function show(id){
@@ -93,6 +95,7 @@ $("joinFamilyForm").onsubmit=async(e)=>{
 
 async function logout(){ await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[],adminInfo:null}; show("authView"); }
 $("logoutBtn").onclick=logout; $("bootstrapLogout").onclick=logout;
+$("appVersion").onclick=()=>location.reload();
 
 function openPage(pageId){
   document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
@@ -123,6 +126,108 @@ async function loadAll(){
   render();
 }
 
+function renderCategoryPie(){
+  const container=$("categoryPie"), legend=$("categoryLegend");
+  if(!container||!legend||!window.echarts)return;
+
+  const byCat={};
+  state.transactions.forEach(t=>{
+    const key=t.categories?.name||"ללא קטגוריה";
+    byCat[key]=(byCat[key]||0)+Number(t.amount||0);
+  });
+  const entries=Object.entries(byCat).sort((x,y)=>y[1]-x[1]);
+
+  if(!entries.length){
+    if(categoryPieChart){categoryPieChart.dispose();categoryPieChart=null;}
+    container.innerHTML='<div class="empty-state chart-empty">אין עדיין עסקאות</div>';
+    legend.innerHTML="";
+    return;
+  }
+
+  container.innerHTML="";
+  const total=entries.reduce((sum,[,value])=>sum+value,0);
+  const data=entries.map(([name,value],index)=>({
+    name,value,
+    itemStyle:{
+      color:PIE_COLORS[index%PIE_COLORS.length],
+      borderColor:"#0b1017",
+      borderWidth:3,
+      borderRadius:8,
+      shadowBlur:18,
+      shadowOffsetY:8,
+      shadowColor:"rgba(0,0,0,.38)"
+    }
+  }));
+
+  if(categoryPieChart) categoryPieChart.dispose();
+  categoryPieChart=echarts.init(container);
+
+  categoryPieChart.setOption({
+    animationDuration:700,
+    animationEasing:"cubicOut",
+    tooltip:{
+      trigger:"item",
+      backgroundColor:"#111923",
+      borderColor:"#334156",
+      textStyle:{color:"#fff"},
+      formatter:p=>`${escapeHtml(p.name)}<br><b>${money(p.value)}</b> · ${p.percent}%`
+    },
+    series:[{
+      type:"pie",
+      radius:["38%","74%"],
+      center:["50%","48%"],
+      startAngle:110,
+      selectedMode:"single",
+      selectedOffset:16,
+      minAngle:4,
+      itemStyle:{borderRadius:8},
+      label:{show:false},
+      emphasis:{
+        scale:true,
+        scaleSize:14,
+        itemStyle:{
+          shadowBlur:28,
+          shadowOffsetY:12,
+          shadowColor:"rgba(0,0,0,.55)"
+        }
+      },
+      data
+    }],
+    graphic:[
+      {type:"text",left:"center",top:"41%",style:{text:"סה״כ",fill:"#8793A3",fontSize:12,fontWeight:600}},
+      {type:"text",left:"center",top:"49%",style:{text:money(total),fill:"#F6F8FB",fontSize:23,fontWeight:800}}
+    ]
+  });
+
+  categoryPieChart.off("click");
+  categoryPieChart.on("click",params=>{
+    categoryPieChart.dispatchAction({type:"pieUnSelect",seriesIndex:0});
+    categoryPieChart.dispatchAction({type:"pieSelect",seriesIndex:0,dataIndex:params.dataIndex});
+  });
+
+  legend.innerHTML=entries.map(([name,value],index)=>{
+    const pct=total?Math.round(value/total*100):0;
+    return `<button class="category-legend-row" type="button" data-cat-index="${index}">
+      <span class="category-legend-main">
+        <span class="category-dot" style="background:${PIE_COLORS[index%PIE_COLORS.length]}"></span>
+        <span><strong>${escapeHtml(name)}</strong><small>${pct}%</small></span>
+      </span>
+      <strong>${money(value)}</strong>
+    </button>`;
+  }).join("");
+
+  legend.querySelectorAll("[data-cat-index]").forEach(btn=>{
+    btn.onclick=()=>{
+      const idx=Number(btn.dataset.catIndex);
+      categoryPieChart.dispatchAction({type:"pieUnSelect",seriesIndex:0});
+      categoryPieChart.dispatchAction({type:"pieSelect",seriesIndex:0,dataIndex:idx});
+      categoryPieChart.dispatchAction({type:"showTip",seriesIndex:0,dataIndex:idx});
+    };
+  });
+
+  setTimeout(()=>categoryPieChart?.resize(),50);
+}
+
 function render(){
   const income=state.incomes.reduce((s,x)=>s+Number(x.amount),0);
   const spent=state.transactions.reduce((s,x)=>s+Number(x.amount),0);
@@ -132,9 +237,7 @@ function render(){
   const available=income-spent-fixed;
   $("incomeAmount").textContent=money(income); $("spentAmount").textContent=money(spent); $("fixedAmount").textContent=money(fixed); $("forecastAmount").textContent=money(forecast); $("availableAmount").textContent=money(available);
 
-  const byCat={}; state.transactions.forEach(t=>{const k=t.categories?.name||"ללא קטגוריה";byCat[k]=(byCat[k]||0)+Number(t.amount)});
-  const max=Math.max(1,...Object.values(byCat));
-  $("categoryBars").innerHTML=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([n,v])=>`<div class="category-row"><div><strong>${escapeHtml(n)}</strong><small>${money(v)}</small></div><div class="progress"><i style="width:${Math.round(v/max*100)}%"></i></div><b>${spent?Math.round(v/spent*100):0}%</b></div>`).join("")||"אין עדיין עסקאות";
+  renderCategoryPie();
 
   const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div><div class="amount-negative">${money(t.amount)}</div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
