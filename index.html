@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260925-2116" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-2125" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -61,10 +61,14 @@
       <header class="topbar">
         <div>
           <p class="eyebrow" id="familyTitle">תקציב משפחתי</p>
-          <h1 id="monthTitle">החודש</h1>
+          <div class="month-switcher">
+            <button id="prevMonth" type="button" aria-label="חודש קודם">‹</button>
+            <h1 id="monthTitle">החודש</h1>
+            <button id="nextMonth" type="button" aria-label="חודש הבא">›</button>
+          </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.36</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.37</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -97,9 +101,14 @@
 
       <section id="transactionsPage" class="page">
         <div class="page-title"><div><p class="eyebrow">תנועות</p><h2>עסקאות</h2></div><div class="page-actions"><button id="testTransaction" class="small-btn secondary-btn">צור נתוני בדיקה</button><button id="openAddTransaction" class="small-btn">+ הוסף</button></div></div>
-        <div class="transaction-search-wrap">
-          <input id="transactionSearch" type="search" placeholder="חיפוש לפי בית עסק, בן משפחה, קטגוריה או סכום…" autocomplete="off" />
-          <button id="clearTransactionSearch" class="search-clear hidden" type="button">×</button>
+        <div class="transaction-filters">
+          <div class="transaction-search-wrap">
+            <input id="transactionSearch" type="search" placeholder="חיפוש לפי בית עסק, בן משפחה, קטגוריה או סכום…" autocomplete="off" />
+            <button id="clearTransactionSearch" class="search-clear hidden" type="button">×</button>
+          </div>
+          <select id="transactionCategoryFilter" aria-label="סינון לפי קטגוריה">
+            <option value="">כל הקטגוריות</option>
+          </select>
         </div>
         <div id="transactionSearchMeta" class="search-meta hidden"></div>
         <div id="allTransactions" class="transaction-list panel"></div>
@@ -194,7 +203,10 @@
       <label class="field-label">בן משפחה<select id="editTxMember" required></select></label>
       <label class="field-label">קטגוריה<select id="editTxCategory"></select></label>
       <input id="editTxId" type="hidden" />
-      <button class="primary" type="submit">שמור שינויים</button>
+      <div class="dialog-actions">
+        <button id="deleteTransaction" class="mini-btn danger-btn" type="button">מחק עסקה</button>
+        <button class="primary" type="submit">שמור שינויים</button>
+      </div>
     </form>
   </dialog>
 
@@ -211,6 +223,6 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
-  <script src="./app.js?v=20260925-1912"></script>
+  <script src="./app.js?v=20260925-2125"></script>
 </body>
 </html>
