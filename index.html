@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./styles.css?v=20260925-1550" />
 </head>
 <body>
-  <div id="appVersion" class="version-badge">v1.0.5</div>
+  <div id="appVersion" class="version-badge">v1.0.6</div>
   <div id="toast" class="toast"></div>
 
   <main class="shell">
@@ -178,7 +178,7 @@
   <dialog id="tokenDialog">
     <div class="dialog-card">
       <div class="dialog-head"><h3>Token ל־Shortcut</h3><button type="button" id="closeTokenDialog">×</button></div>
-      <p class="muted">ה־Token מוצג פעם אחת. שמור אותו בתוך Shortcut באייפון.</p>
+      <p class="muted">זהו קוד אישי שמאפשר לאייפון שלך לשלוח עסקאות מ־Apple Pay ישירות לחשבון המשפחתי. את הטוקן מדביקים באוטומציה של קיצורי דרך בשדה <strong>x-shortcut-token</strong>. הטוקן מוצג פעם אחת בלבד, לכן מומלץ להעתיק אותו מיד.</p>
       <textarea id="tokenValue" readonly></textarea>
       <button id="copyToken" class="primary">העתק Token</button>
       <p class="endpoint">Endpoint:<br><code>https://ugdaeyfxxcaxloukqqkk.supabase.co/functions/v1/apple-pay</code></p>
@@ -187,6 +187,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
-  <script src="./app.js?v=20260925-1550"></script>
+  <script src="./app.js?v=20260925-1610"></script>
 </body>
 </html>
