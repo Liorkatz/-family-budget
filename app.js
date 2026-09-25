@@ -30,7 +30,7 @@ async function init(){
   $("monthTitle").textContent = monthName();
   if(sessionStorage.getItem("showRefreshToast")==="1"){
     sessionStorage.removeItem("showRefreshToast");
-    setTimeout(()=>toast("בוצע עדכון"),250);
+    setTimeout(()=>toast("בוצע עדכון ✓"),250);
   }
   const {data:{session}} = await sb.auth.getSession();
   if(!session){ show("authView"); return; }
@@ -171,13 +171,7 @@ function renderCategoryPie(){
   categoryPieChart.setOption({
     animationDuration:700,
     animationEasing:"cubicOut",
-    tooltip:{
-      trigger:"item",
-      backgroundColor:"#111923",
-      borderColor:"#334156",
-      textStyle:{color:"#fff"},
-      formatter:p=>`<b>${money(p.value)}</b><br>${p.percent}% מההוצאות`
-    },
+    tooltip:{show:false},
     series:[{
       type:"pie",
       radius:["28%","53%"],
@@ -201,8 +195,8 @@ function renderCategoryPie(){
         lineHeight:15,
         formatter:p=>`{name|${p.name}}\n{value|${money(p.value)}}`,
         rich:{
-          name:{fontWeight:700,color:"#F3F6FA",fontSize:11,lineHeight:15},
-          value:{fontWeight:800,color:"#B9C4D2",fontSize:11,lineHeight:15}
+          name:{fontWeight:750,color:"#F4F7FB",fontSize:11,lineHeight:16,align:"center"},
+          value:{fontWeight:850,color:"#AEB9C8",fontSize:11,lineHeight:17,align:"center"}
         }
       },
       labelLine:{
@@ -240,7 +234,6 @@ function renderCategoryPie(){
   categoryPieChart.on("click",params=>{
     categoryPieChart.dispatchAction({type:"pieUnSelect",seriesIndex:0});
     categoryPieChart.dispatchAction({type:"pieSelect",seriesIndex:0,dataIndex:params.dataIndex});
-    categoryPieChart.dispatchAction({type:"showTip",seriesIndex:0,dataIndex:params.dataIndex});
   });
 
   setTimeout(()=>categoryPieChart?.resize(),50);
@@ -427,49 +420,44 @@ $("fixedStatCard").onclick=()=>{
   setTimeout(()=>$("fixedExpensesCard").scrollIntoView({behavior:"smooth",block:"start"}),50);
 };
 $("fixedStatCard").onkeydown=(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("fixedStatCard").click();}};
-async function editTransaction(id){
+function editTransaction(id){
   const t=state.transactions.find(x=>x.id===id);
   if(!t)return;
 
-  const merchant=prompt("שם בית העסק",t.merchant||"");
-  if(merchant===null)return;
+  $("editTxId").value=t.id;
+  $("editTxMerchant").value=t.merchant||"";
+  $("editTxAmount").value=Number(t.amount||0);
 
-  const amountText=prompt("סכום העסקה",String(t.amount??""));
-  if(amountText===null)return;
-  const amount=Number(amountText);
+  $("editTxMember").innerHTML=state.members
+    .map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join("");
+  $("editTxMember").value=t.member_id||state.me?.id||"";
+
+  $("editTxCategory").innerHTML='<option value="">ללא קטגוריה</option>'+
+    state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  $("editTxCategory").value=t.category_id||"";
+
+  $("editTransactionDialog").showModal();
+}
+
+$("closeEditTransactionDialog").onclick=()=>$("editTransactionDialog").close();
+$("editTransactionForm").onsubmit=async(e)=>{
+  e.preventDefault();
+  const id=$("editTxId").value;
+  const amount=Number($("editTxAmount").value);
   if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");
 
-  const memberText=prompt(
-    "בן משפחה:\n"+state.members.map((m,i)=>`${i+1}. ${m.name}`).join("\n"),
-    String(Math.max(1,state.members.findIndex(m=>m.id===t.member_id)+1))
-  );
-  if(memberText===null)return;
-  const member=state.members[Number(memberText)-1];
-  if(!member)return toast("בן משפחה לא תקין");
-
-  const categoryText=prompt(
-    "קטגוריה:\n0. ללא קטגוריה\n"+state.categories.map((c,i)=>`${i+1}. ${c.name}`).join("\n"),
-    String(Math.max(0,state.categories.findIndex(c=>c.id===t.category_id)+1))
-  );
-  if(categoryText===null)return;
-  let categoryId=null;
-  const catIndex=Number(categoryText);
-  if(catIndex!==0){
-    const category=state.categories[catIndex-1];
-    if(!category)return toast("קטגוריה לא תקינה");
-    categoryId=category.id;
-  }
-
-  const {error}=await sb.from("transactions").update({
-    merchant:merchant.trim()||null,
+  const payload={
+    merchant:$("editTxMerchant").value.trim()||null,
     amount,
-    member_id:member.id,
-    category_id:categoryId
-  }).eq("id",id);
+    member_id:$("editTxMember").value,
+    category_id:$("editTxCategory").value||null
+  };
+  const {error}=await sb.from("transactions").update(payload).eq("id",id);
   if(error)return toast(error.message);
+  $("editTransactionDialog").close();
   toast("העסקה עודכנה");
   await loadAll();
-}
+};
 
 function bindTransactionLongPress(container){
   if(!container)return;
