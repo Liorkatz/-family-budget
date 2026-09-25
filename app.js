@@ -269,7 +269,16 @@ function render(){
       : '<div class="empty-state">אין בקשות הצטרפות ממתינות</div>';
   }
   $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי · ${money(x.amount)}</small></div><div class="mini-actions"><button class="mini-btn" onclick="editIncome('${x.id}')">ערוך</button><button class="mini-btn danger-btn" onclick="deleteIncome('${x.id}','${escapeHtml(x.description)}')">מחק</button></div></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
-  $("fixedList").innerHTML=state.fixed.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
+  const orderedFixed=[...state.fixed].sort((a,b)=>{
+    const aFilled=Number(a.amount)>0?1:0;
+    const bFilled=Number(b.amount)>0?1:0;
+    if(aFilled!==bFilled)return bFilled-aFilled;
+    const aOrder=Number(a.display_order)||0;
+    const bOrder=Number(b.display_order)||0;
+    if(aOrder!==bOrder)return aOrder-bOrder;
+    return String(a.description||"").localeCompare(String(b.description||""),"he");
+  });
+  $("fixedList").innerHTML=orderedFixed.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
   $("categoriesList").innerHTML=state.categories.map(c=>{const b=state.budgets.find(x=>x.category_id===c.id);return `<div class="settings-row"><div><strong>${escapeHtml(c.name)}</strong><small>${b?"תקציב "+money(b.monthly_limit):"ללא תקציב"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="setBudget('${c.id}','${escapeHtml(c.name)}')">תקציב</button></div></div>`}).join("");
 
   $("txMember").innerHTML=state.members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join("");
