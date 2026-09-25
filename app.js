@@ -138,7 +138,7 @@ function render(){
 
   const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div><div class="amount-negative">${money(t.amount)}</div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
-  $("allTransactions").innerHTML=txHtml(state.transactions);
+  renderTransactionSearch();
 
   $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">צור טוקן</button>`:""}</div></div>`).join("");
 
@@ -261,6 +261,31 @@ $("fixedStatCard").onclick=()=>{
   setTimeout(()=>$("fixedExpensesCard").scrollIntoView({behavior:"smooth",block:"start"}),50);
 };
 $("fixedStatCard").onkeydown=(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("fixedStatCard").click();}};
+function renderTransactionSearch(){
+  const q=($("transactionSearch")?.value||"").trim().toLowerCase();
+  let rows=state.transactions;
+  if(q){
+    rows=state.transactions.filter(t=>{
+      const hay=[
+        t.merchant||"",
+        t.members?.name||"",
+        t.categories?.name||"",
+        String(t.amount??""),
+        money(t.amount)
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  $("allTransactions").innerHTML=(rows.map(t=>`<div class="transaction-row"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div><div class="amount-negative">${money(t.amount)}</div></div>`).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
+  if($("transactionSearchMeta")){
+    $("transactionSearchMeta").classList.toggle("hidden",!q);
+    $("transactionSearchMeta").textContent=q?`${rows.length} תוצאות מתוך ${state.transactions.length}`:"";
+  }
+  if($("clearTransactionSearch"))$("clearTransactionSearch").classList.toggle("hidden",!q);
+}
+$("transactionSearch").oninput=renderTransactionSearch;
+$("clearTransactionSearch").onclick=()=>{$("transactionSearch").value="";renderTransactionSearch();$("transactionSearch").focus();};
+
 $("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
 $("closeTransactionDialog").onclick=()=>$("transactionDialog").close();
 $("transactionForm").onsubmit=async(e)=>{e.preventDefault();const payload={family_id:state.family.id,member_id:$("txMember").value,category_id:$("txCategory").value||null,amount:Number($("txAmount").value),merchant:$("txMerchant").value.trim()||null,source:"manual"};const {error}=await sb.from("transactions").insert(payload);if(error)return toast(error.message);$("transactionDialog").close();e.target.reset();await loadAll();};
