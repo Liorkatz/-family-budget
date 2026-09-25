@@ -3,10 +3,38 @@ const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabasePublishable
 
 const $ = (id) => document.getElementById(id);
 const money = (n) => new Intl.NumberFormat("he-IL",{style:"currency",currency:"ILS",maximumFractionDigits:0}).format(Number(n||0));
-const monthName = () => new Intl.DateTimeFormat("he-IL",{month:"long",year:"numeric"}).format(new Date());
-const monthStart = () => { const d=new Date(); return new Date(d.getFullYear(),d.getMonth(),1).toISOString(); };
-const monthEnd = () => { const d=new Date(); return new Date(d.getFullYear(),d.getMonth()+1,1).toISOString(); };
-const toast = (msg) => { $("toast").textContent=msg; $("toast").classList.add("show"); setTimeout(()=>$("toast").classList.remove("show"),2200); };
+let viewedMonth = new Date(new Date().getFullYear(),new Date().getMonth(),1);
+const monthName = () => new Intl.DateTimeFormat("he-IL",{month:"long",year:"numeric"}).format(viewedMonth);
+const monthStart = () => new Date(viewedMonth.getFullYear(),viewedMonth.getMonth(),1).toISOString();
+const monthEnd = () => new Date(viewedMonth.getFullYear(),viewedMonth.getMonth()+1,1).toISOString();
+let toastTimer=null;
+const toast = (msg,undoAction=null) => {
+  const el=$("toast");
+  clearTimeout(toastTimer);
+  el.classList.remove("show","has-action");
+  el.replaceChildren();
+  const text=document.createElement("span");
+  text.textContent=msg;
+  el.appendChild(text);
+  if(undoAction){
+    el.classList.add("has-action");
+    const btn=document.createElement("button");
+    btn.type="button";
+    btn.textContent="בטל";
+    btn.onclick=async()=>{
+      btn.disabled=true;
+      try{
+        await undoAction();
+        toast("הפעולה בוטלה ✓");
+      }catch(err){
+        toast(err?.message||"לא ניתן לבטל את הפעולה");
+      }
+    };
+    el.appendChild(btn);
+  }
+  requestAnimationFrame(()=>el.classList.add("show"));
+  toastTimer=setTimeout(()=>el.classList.remove("show"),undoAction?6500:2200);
+};
 const escapeHtml = (v="") => String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
 
 let authMode = "login";
@@ -28,7 +56,7 @@ async function currentMembership(){
 }
 
 async function init(){
-  $("monthTitle").textContent = monthName();
+  updateMonthHeader();
   if(sessionStorage.getItem("showRefreshToast")==="1"){
     sessionStorage.removeItem("showRefreshToast");
     setTimeout(()=>toast("בוצע עדכון ✓"),250);
@@ -104,6 +132,21 @@ $("appVersion").onclick=()=>{
   sessionStorage.setItem("showRefreshToast","1");
   location.reload();
 };
+
+function updateMonthHeader(){
+  $("monthTitle").textContent=monthName();
+  const now=new Date();
+  const atCurrent=viewedMonth.getFullYear()===now.getFullYear() && viewedMonth.getMonth()===now.getMonth();
+  if($("nextMonth")) $("nextMonth").disabled=atCurrent;
+}
+async function moveMonth(delta){
+  viewedMonth=new Date(viewedMonth.getFullYear(),viewedMonth.getMonth()+delta,1);
+  updateMonthHeader();
+  selectedCategoryIndex=null;
+  await loadAll();
+}
+$("prevMonth").onclick=()=>moveMonth(-1);
+$("nextMonth").onclick=()=>moveMonth(1);
 
 function openPage(pageId){
   document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
@@ -283,8 +326,16 @@ function renderCategoryPie(){
 
   categoryPieChart.off("click");
   categoryPieChart.on("click",params=>{
-    selectedCategoryIndex=selectedCategoryIndex===params.dataIndex?null:params.dataIndex;
-    renderCategoryPie();
+    const chosen=data[params.dataIndex];
+    const filter=$("transactionCategoryFilter");
+    if(filter){
+      const category=state.categories.find(c=>c.name===chosen.name);
+      filter.value=chosen.name==="ללא קטגוריה"?"__none__":(category?.id||"");
+    }
+    selectedCategoryIndex=null;
+    openPage("transactionsPage");
+    renderTransactionSearch();
+    setTimeout(()=>$("transactionCategoryFilter")?.scrollIntoView({behavior:"smooth",block:"nearest"}),40);
   });
 
   if(!window.__categoryPieOutsideClickBound){
@@ -305,8 +356,12 @@ function render(){
   const income=state.incomes.reduce((s,x)=>s+Number(x.amount),0);
   const spent=state.transactions.reduce((s,x)=>s+Number(x.amount),0);
   const fixed=state.fixed.reduce((s,x)=>s+Number(x.amount),0);
-  const d=new Date(), daysInMonth=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(), elapsed=Math.max(1,d.getDate());
-  const forecast=Math.round((spent/elapsed)*daysInMonth);
+  const now=new Date();
+  const d=new Date(viewedMonth.getFullYear(),viewedMonth.getMonth(),1);
+  const daysInMonth=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const isCurrentMonth=d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  const elapsed=isCurrentMonth?Math.max(1,now.getDate()):daysInMonth;
+  const forecast=isCurrentMonth?Math.round((spent/elapsed)*daysInMonth):Math.round(spent);
   const available=income-spent-fixed;
   $("incomeAmount").textContent=money(income); $("spentAmount").textContent=money(spent); $("fixedAmount").textContent=money(fixed); $("forecastAmount").textContent=money(forecast); $("availableAmount").textContent=money(available);
 
@@ -334,6 +389,12 @@ function render(){
 
   $("txMember").innerHTML=state.members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join("");
   $("txCategory").innerHTML='<option value="">ללא קטגוריה</option>'+state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  if($("transactionCategoryFilter")){
+    const keep=$("transactionCategoryFilter").value;
+    $("transactionCategoryFilter").innerHTML='<option value="">כל הקטגוריות</option><option value="__none__">ללא קטגוריה</option>'+state.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+    const values=[...$("transactionCategoryFilter").options].map(o=>o.value);
+    $("transactionCategoryFilter").value=values.includes(keep)?keep:"";
+  }
 
   const byMember={};state.transactions.forEach(t=>{const k=t.members?.name||"לא ידוע";byMember[k]=(byMember[k]||0)+Number(t.amount)});
   $("memberBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>הוצאות לפי בן משפחה</strong></div>'+Object.entries(byMember).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`<div class="settings-row"><span>${escapeHtml(n)}</span><strong>${money(v)}</strong></div>`).join("")+'</div>';
@@ -344,16 +405,31 @@ $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.fr
 
 window.editIncome=async(id)=>{
   const item=state.incomes.find(x=>x.id===id); if(!item)return;
+  const previous={description:item.description,amount:Number(item.amount)};
   const description=prompt("תיאור ההכנסה",item.description); if(description===null)return;
   const value=prompt("סכום חודשי",String(item.amount)); if(value===null)return;
   const amount=Number(value); if(!description.trim()||!Number.isFinite(amount)||amount<0)return toast("פרטים לא תקינים");
   const {error}=await sb.from("incomes").update({description:description.trim(),amount}).eq("id",id);
-  if(error)return toast(error.message); toast("ההכנסה עודכנה"); await loadAll();
+  if(error)return toast(error.message);
+  await loadAll();
+  toast("ההכנסה עודכנה",async()=>{
+    const {error}=await sb.from("incomes").update(previous).eq("id",id);
+    if(error)throw error;
+    await loadAll();
+  });
 };
 window.deleteIncome=async(id,name)=>{
+  const item=state.incomes.find(x=>x.id===id); if(!item)return;
   if(!confirm(`למחוק את ההכנסה "${name}"?`))return;
+  const restore={...item};
   const {error}=await sb.from("incomes").delete().eq("id",id);
-  if(error)return toast(error.message); toast("ההכנסה נמחקה"); await loadAll();
+  if(error)return toast(error.message);
+  await loadAll();
+  toast("ההכנסה נמחקה",async()=>{
+    const {error}=await sb.from("incomes").insert(restore);
+    if(error)throw error;
+    await loadAll();
+  });
 };
 
 window.editMember=async(id,currentName)=>{
@@ -361,8 +437,12 @@ window.editMember=async(id,currentName)=>{
   if(!name.trim())return toast("השם לא יכול להיות ריק");
   const {error}=await sb.from("members").update({name:name.trim()}).eq("id",id);
   if(error)return toast(error.message);
-  if(id===state.me.id)state.me.name=name.trim();
-  toast("שם בן המשפחה עודכן"); await loadAll();
+  await loadAll();
+  toast("שם בן המשפחה עודכן",async()=>{
+    const {error}=await sb.from("members").update({name:currentName}).eq("id",id);
+    if(error)throw error;
+    await loadAll();
+  });
 };
 window.deleteMember=async(id,name)=>{
   if(!confirm(`למחוק את ${name} מהמשפחה?`))return;
@@ -391,10 +471,26 @@ function renderFixedList(filterText=""){
 }
 $("fixedDesc").oninput=()=>renderFixedList($("fixedDesc").value);
 $("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
-window.saveFixed=async(id)=>{const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);toast("ההוצאה עודכנה");await loadAll();};
+window.saveFixed=async(id)=>{const item=state.fixed.find(x=>x.id===id);if(!item)return;const previous=Number(item.amount);const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);await loadAll();toast("ההוצאה עודכנה",async()=>{const {error}=await sb.from("fixed_expenses").update({amount:previous}).eq("id",id);if(error)throw error;await loadAll();});};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
-window.setBudget=async(categoryId,name)=>{const value=prompt(`תקציב חודשי ל-${name}`);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const existing=state.budgets.find(b=>b.category_id===categoryId);const q=existing?sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id):sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount});const {error}=await q;if(error)return toast(error.message);await loadAll();};
+window.setBudget=async(categoryId,name)=>{
+  const value=prompt(`תקציב חודשי ל-${name}`);if(value===null)return;
+  const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");
+  const existing=state.budgets.find(b=>b.category_id===categoryId);
+  if(existing){
+    const previous=Number(existing.monthly_limit);
+    const {error}=await sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id);
+    if(error)return toast(error.message);
+    await loadAll();
+    toast("התקציב עודכן",async()=>{const {error}=await sb.from("budgets").update({monthly_limit:previous}).eq("id",existing.id);if(error)throw error;await loadAll();});
+  }else{
+    const {data,error}=await sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount}).select("id").single();
+    if(error)return toast(error.message);
+    await loadAll();
+    toast("התקציב נוסף",async()=>{const {error}=await sb.from("budgets").delete().eq("id",data.id);if(error)throw error;await loadAll();});
+  }
+};
 
 window.makeToken=async(memberId,name)=>{const {data,error}=await sb.functions.invoke("create-shortcut-token",{body:{memberId,label:`iPhone - ${name}`}});if(error||data?.error)return toast(data?.error||error.message);$("tokenValue").value=data.token;$("tokenDialog").showModal();};
 $("rotateFamilyCode").onclick=async()=>{
@@ -512,6 +608,8 @@ $("closeEditTransactionDialog").onclick=()=>$("editTransactionDialog").close();
 $("editTransactionForm").onsubmit=async(e)=>{
   e.preventDefault();
   const id=$("editTxId").value;
+  const current=state.transactions.find(x=>x.id===id); if(!current)return;
+  const previous={merchant:current.merchant||null,amount:Number(current.amount),member_id:current.member_id,category_id:current.category_id||null};
   const amount=Number($("editTxAmount").value);
   if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");
 
@@ -524,8 +622,39 @@ $("editTransactionForm").onsubmit=async(e)=>{
   const {error}=await sb.from("transactions").update(payload).eq("id",id);
   if(error)return toast(error.message);
   $("editTransactionDialog").close();
-  toast("העסקה עודכנה");
   await loadAll();
+  toast("העסקה עודכנה",async()=>{
+    const {error}=await sb.from("transactions").update(previous).eq("id",id);
+    if(error)throw error;
+    await loadAll();
+  });
+};
+
+$("deleteTransaction").onclick=async()=>{
+  const id=$("editTxId").value;
+  const current=state.transactions.find(x=>x.id===id); if(!current)return;
+  if(!confirm("למחוק את העסקה?"))return;
+  const restore={
+    id:current.id,
+    family_id:current.family_id,
+    member_id:current.member_id,
+    category_id:current.category_id||null,
+    amount:Number(current.amount),
+    currency:current.currency||"ILS",
+    merchant:current.merchant||null,
+    source:current.source||"manual",
+    occurred_at:current.occurred_at,
+    external_id:current.external_id||null
+  };
+  const {error}=await sb.from("transactions").delete().eq("id",id);
+  if(error)return toast(error.message);
+  $("editTransactionDialog").close();
+  await loadAll();
+  toast("העסקה נמחקה",async()=>{
+    const {error}=await sb.from("transactions").insert(restore);
+    if(error)throw error;
+    await loadAll();
+  });
 };
 
 function bindTransactionLongPress(container){
@@ -559,9 +688,15 @@ function bindTransactionLongPress(container){
 
 function renderTransactionSearch(){
   const q=($("transactionSearch")?.value||"").trim().toLowerCase();
+  const categoryFilter=$("transactionCategoryFilter")?.value||"";
   let rows=state.transactions;
+
+  if(categoryFilter){
+    rows=rows.filter(t=>categoryFilter==="__none__"?!t.category_id:t.category_id===categoryFilter);
+  }
+
   if(q){
-    rows=state.transactions.filter(t=>{
+    rows=rows.filter(t=>{
       const hay=[
         t.merchant||"",
         t.members?.name||"",
@@ -572,15 +707,20 @@ function renderTransactionSearch(){
       return hay.includes(q);
     });
   }
+
   $("allTransactions").innerHTML=(rows.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div></div>`).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
   bindTransactionLongPress($("allTransactions"));
+
+  const active=Boolean(q||categoryFilter);
   if($("transactionSearchMeta")){
-    $("transactionSearchMeta").classList.toggle("hidden",!q);
-    $("transactionSearchMeta").textContent=q?`${rows.length} תוצאות מתוך ${state.transactions.length}`:"";
+    $("transactionSearchMeta").classList.toggle("hidden",!active);
+    const catName=categoryFilter==="__none__"?"ללא קטגוריה":state.categories.find(c=>c.id===categoryFilter)?.name;
+    $("transactionSearchMeta").textContent=active?`${rows.length} תוצאות מתוך ${state.transactions.length}${catName?` · ${catName}`:""}`:"";
   }
-  if($("clearTransactionSearch"))$("clearTransactionSearch").classList.toggle("hidden",!q);
+  if($("clearTransactionSearch")) $("clearTransactionSearch").classList.toggle("hidden",!q);
 }
 $("transactionSearch").oninput=renderTransactionSearch;
+$("transactionCategoryFilter").onchange=renderTransactionSearch;
 $("clearTransactionSearch").onclick=()=>{$("transactionSearch").value="";renderTransactionSearch();$("transactionSearch").focus();};
 
 $("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
