@@ -39,3 +39,9 @@
 @media(max-width:420px){
   .category-pie{height:490px}
 }
+
+.transaction-editable{cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease}
+.transaction-editable.holding{transform:scale(.985);background:#151d28}
+.transaction-main{width:100%}
+.amount-under-name{margin-top:3px;font-size:17px}
+.transaction-main small{display:block;margin-top:4px}
