@@ -326,16 +326,8 @@ function renderCategoryPie(){
 
   categoryPieChart.off("click");
   categoryPieChart.on("click",params=>{
-    const chosen=data[params.dataIndex];
-    const filter=$("transactionCategoryFilter");
-    if(filter){
-      const category=state.categories.find(c=>c.name===chosen.name);
-      filter.value=chosen.name==="ללא קטגוריה"?"__none__":(category?.id||"");
-    }
-    selectedCategoryIndex=null;
-    openPage("transactionsPage");
-    renderTransactionSearch();
-    setTimeout(()=>$("transactionCategoryFilter")?.scrollIntoView({behavior:"smooth",block:"nearest"}),40);
+    selectedCategoryIndex=selectedCategoryIndex===params.dataIndex?null:params.dataIndex;
+    renderCategoryPie();
   });
 
   if(!window.__categoryPieOutsideClickBound){
