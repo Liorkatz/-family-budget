@@ -1650,3 +1650,108 @@ dialog::backdrop{
     font-size:16px;
   }
 }
+
+
+/* v1.0.37 - month navigation, category filtering and undo */
+.month-switcher{
+  display:flex;
+  direction:ltr;
+  align-items:center;
+  gap:8px;
+  margin-top:1px;
+}
+.month-switcher h1{
+  min-width:150px;
+  margin:0;
+  text-align:center;
+}
+.month-switcher button{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:11px;
+  color:#EAF0FA;
+  background:rgba(255,255,255,.055);
+  font-size:24px;
+  line-height:1;
+}
+.month-switcher button:disabled{
+  opacity:.28;
+  pointer-events:none;
+}
+
+.transaction-filters{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 150px;
+  gap:9px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.transaction-filters .transaction-search-wrap{
+  margin:0;
+}
+#transactionCategoryFilter{
+  min-height:48px;
+  padding:10px 12px;
+  font-size:14px;
+}
+
+.toast.has-action{
+  top:auto;
+  bottom:76px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transform:translate(-50%,18px);
+  padding:10px 12px;
+}
+.toast.has-action.show{
+  transform:translate(-50%,0);
+}
+.toast.has-action button{
+  border:0;
+  border-radius:9px;
+  padding:6px 10px;
+  color:#FFFFFF;
+  background:#6675F5;
+  font:inherit;
+  font-weight:800;
+}
+
+.dialog-actions{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:9px;
+  align-items:center;
+}
+.dialog-actions .primary{
+  width:100%;
+}
+#deleteTransaction{
+  min-height:48px;
+  padding:10px 12px;
+}
+
+@media(max-width:480px){
+  .month-switcher{
+    gap:5px;
+  }
+  .month-switcher h1{
+    min-width:128px;
+  }
+  .month-switcher button{
+    width:29px;
+    height:29px;
+  }
+  .transaction-filters{
+    grid-template-columns:1fr 128px;
+    gap:7px;
+  }
+  #transactionCategoryFilter{
+    font-size:13px;
+    padding:9px 8px;
+  }
+}
