@@ -108,7 +108,7 @@ async function loadAll(){
     sb.from("categories").select("*").eq("family_id",f).order("name"),
     sb.from("transactions").select("*,members(name),categories(name)").eq("family_id",f).gte("occurred_at",monthStart()).lt("occurred_at",monthEnd()).order("occurred_at",{ascending:false}),
     sb.from("incomes").select("*").eq("family_id",f).eq("active",true).order("created_at"),
-    sb.from("fixed_expenses").select("*,categories(name)").eq("family_id",f).eq("active",true).order("created_at"),
+    sb.from("fixed_expenses").select("*,categories(name)").eq("family_id",f).eq("active",true).order("display_order",{ascending:true}).order("created_at",{ascending:true}),
     sb.from("budgets").select("*,categories(name)").eq("family_id",f)
   ]);
   for(const r of [members,cats,txs,incomes,fixed,budgets]) if(r.error) throw r.error;
@@ -163,7 +163,7 @@ function render(){
 }
 
 $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
-$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value,amount:Number($("fixedValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
+$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.max(100,...state.fixed.map(x=>Number(x.display_order)||0))+1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value,amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
 window.saveFixed=async(id)=>{const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);toast("ההוצאה עודכנה");await loadAll();};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
