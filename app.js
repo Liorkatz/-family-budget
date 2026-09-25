@@ -176,11 +176,11 @@ function renderCategoryPie(){
       backgroundColor:"#111923",
       borderColor:"#334156",
       textStyle:{color:"#fff"},
-      formatter:p=>`${escapeHtml(p.name)}<br><b>${money(p.value)}</b> · ${p.percent}%`
+      formatter:p=>`<b>${money(p.value)}</b><br>${p.percent}% מההוצאות`
     },
     series:[{
       type:"pie",
-      radius:["29%","55%"],
+      radius:["28%","53%"],
       center:["50%","50%"],
       startAngle:110,
       selectedMode:"single",
@@ -194,7 +194,7 @@ function renderCategoryPie(){
         alignTo:"edge",
         edgeDistance:8,
         bleedMargin:4,
-        width:112,
+        width:118,
         overflow:"break",
         color:"#F3F6FA",
         fontSize:11,
@@ -207,8 +207,8 @@ function renderCategoryPie(){
       },
       labelLine:{
         show:true,
-        length:22,
-        length2:26,
+        length:24,
+        length2:30,
         minTurnAngle:35,
         smooth:.12,
         lineStyle:{color:"#7A8798",width:1.35}
