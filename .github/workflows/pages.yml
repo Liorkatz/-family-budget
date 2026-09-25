@@ -30,10 +30,36 @@ jobs:
           python -m pip install --quiet pillow
           python - <<'PY'
           from PIL import Image
-          img = Image.open("app-icon.png").convert("RGB")
+          from pathlib import Path
+
+          candidates = [
+              Path("family-budget-icon-512-v3.png"),
+              Path("family-budget-icon-192-v3.png"),
+              Path("app-icon.png"),
+          ]
+
+          img = None
+          for candidate in candidates:
+              if not candidate.exists():
+                  continue
+              try:
+                  test = Image.open(candidate)
+                  test.load()
+                  img = test.convert("RGB")
+                  print(f"Using icon source: {candidate} ({test.size[0]}x{test.size[1]})")
+                  break
+              except Exception as exc:
+                  print(f"Skipping invalid icon source {candidate}: {exc}")
+
+          if img is None:
+              raise RuntimeError("No valid icon source found")
+
           for size in (180, 192, 512):
               out = img.resize((size, size), Image.Resampling.LANCZOS)
               out.save(f"icon-{size}.png", "PNG", optimize=True)
+              verify = Image.open(f"icon-{size}.png")
+              verify.load()
+              print(f"Generated icon-{size}.png ({verify.size[0]}x{verify.size[1]})")
           PY
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
