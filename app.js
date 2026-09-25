@@ -202,9 +202,9 @@ function renderCategoryPie(){
         overflow:"break",
         color:"#EAF0FA",
         formatter:p=>`${p.name}\n${money(p.value)}`,
-        fontWeight:700,
-        fontSize:13,
-        lineHeight:20
+        fontWeight:800,
+        fontSize:15,
+        lineHeight:22
       },
       labelLine:{
         show:true,
@@ -254,12 +254,13 @@ function renderCategoryPie(){
           ? (top+bottom)/2
           : top+(rank*(bottom-top)/(sameSide.length-1));
 
-        const labelH=params.labelRect?.height||40;
-        points[1][1]=slot;
-        points[2][1]=slot;
+        const spreadY=current.naturalY+((slot-current.naturalY)*0.5);
+        const labelH=params.labelRect?.height||44;
+        points[1][1]=spreadY;
+        points[2][1]=spreadY;
 
         return{
-          y:slot-(labelH/2),
+          y:spreadY-(labelH/2),
           labelLinePoints:points,
           hideOverlap:false,
           draggable:false
@@ -268,7 +269,7 @@ function renderCategoryPie(){
       emphasis:{
         scale:true,
         scaleSize:13,
-        label:{color:"#FFFFFF",fontSize:16,fontWeight:900,lineHeight:22},
+        label:{color:"#FFFFFF",fontSize:18,fontWeight:900,lineHeight:24},
         labelLine:{lineStyle:{color:"#FFFFFF",width:2}},
         itemStyle:{shadowBlur:28,shadowOffsetY:10,shadowColor:"rgba(0,0,0,.55)"}
       },
