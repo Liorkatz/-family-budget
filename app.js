@@ -94,11 +94,12 @@ $("joinFamilyForm").onsubmit=async(e)=>{
 async function logout(){ await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[],adminInfo:null}; show("authView"); }
 $("logoutBtn").onclick=logout; $("bootstrapLogout").onclick=logout;
 
+function openPage(pageId){
+  document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===pageId));
+}
 document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.onclick=()=>{
-  document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  $(btn.dataset.page).classList.add("active");
+  openPage(btn.dataset.page);
 });
 
 async function loadAll(){
@@ -221,6 +222,12 @@ $("testTransaction").onclick=async()=>{
   toast("עסקת בדיקה של ₪12.34 נוספה");
   await loadAll();
 };
+$("fixedStatCard").onclick=()=>{
+  openPage("settingsPage");
+  $("fixedExpensesCard").open=true;
+  setTimeout(()=>$("fixedExpensesCard").scrollIntoView({behavior:"smooth",block:"start"}),50);
+};
+$("fixedStatCard").onkeydown=(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("fixedStatCard").click();}};
 $("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
 $("closeTransactionDialog").onclick=()=>$("transactionDialog").close();
 $("transactionForm").onsubmit=async(e)=>{e.preventDefault();const payload={family_id:state.family.id,member_id:$("txMember").value,category_id:$("txCategory").value||null,amount:Number($("txAmount").value),merchant:$("txMerchant").value.trim()||null,source:"manual"};const {error}=await sb.from("transactions").insert(payload);if(error)return toast(error.message);$("transactionDialog").close();e.target.reset();await loadAll();};
