@@ -1198,3 +1198,16 @@ dialog::backdrop{
     font-size:10px;
   }
 }
+
+
+/* v1.0.26 - bottom nav wider to screen edges */
+.bottom-nav{
+  left:2px;
+  right:2px;
+}
+@media(max-width:480px){
+  .bottom-nav{
+    left:2px;
+    right:2px;
+  }
+}
