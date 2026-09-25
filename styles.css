@@ -1591,3 +1591,62 @@ dialog::backdrop{
     width:84px;
   }
 }
+
+
+/* v1.0.36 - compact income rows */
+#incomeList .settings-row{
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  text-align:right;
+  gap:12px;
+  padding:10px 12px;
+  margin-bottom:6px;
+  min-height:58px;
+}
+
+#incomeList .settings-row > div:first-child{
+  flex:1 1 auto;
+  min-width:0;
+  text-align:right;
+}
+
+#incomeList .settings-row strong{
+  font-size:17px;
+  line-height:1.15;
+  text-align:right;
+}
+
+#incomeList .settings-row small{
+  display:inline-block;
+  margin-top:2px;
+  font-size:12px;
+  text-align:right;
+}
+
+#incomeList .mini-actions{
+  flex:0 0 auto;
+  display:flex;
+  flex-wrap:nowrap;
+  justify-content:flex-start;
+  gap:6px;
+}
+
+#incomeList .mini-btn{
+  padding:6px 8px;
+  border-radius:9px;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+@media(max-width:480px){
+  #incomeList .settings-row{
+    padding:9px 10px;
+    min-height:54px;
+    gap:8px;
+  }
+
+  #incomeList .settings-row strong{
+    font-size:16px;
+  }
+}
