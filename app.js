@@ -179,16 +179,20 @@ $("rotateFamilyCode").onclick=async()=>{
   await loadAll();
 };
 
-$("customFamilyCodeForm").onsubmit=async(e)=>{
-  e.preventDefault();
+$("saveFamilyCode").onclick=async()=>{
   const code=$("customFamilyCode").value.trim().toUpperCase();
-  const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"set_code",code}});
-  if(error||data?.error)return toast(data?.error||error.message);
-  $("customFamilyCode").value="";
-  sessionStorage.setItem("familyCode", data.familyCode);
-  $("familyCodeHint").textContent=data.familyCode;
-  toast("קוד המשפחה עודכן");
-  await loadAll();
+  if(code.length<6||code.length>24)return toast("הקוד חייב להיות באורך 6–24 תווים");
+  $("saveFamilyCode").disabled=true;
+  try{
+    const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"set_code",code}});
+    if(error||data?.error){toast(data?.error||error.message);return;}
+    $("customFamilyCode").value="";
+    sessionStorage.setItem("familyCode", data.familyCode);
+    $("familyCodeHint").textContent=data.familyCode;
+    toast("קוד המשפחה עודכן");
+  }finally{
+    $("saveFamilyCode").disabled=false;
+  }
 };
 window.decideJoin=async(requestId,action)=>{
   const {data,error}=await sb.functions.invoke("manage-family",{body:{action,requestId}});
@@ -221,5 +225,7 @@ $("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
 $("closeTransactionDialog").onclick=()=>$("transactionDialog").close();
 $("transactionForm").onsubmit=async(e)=>{e.preventDefault();const payload={family_id:state.family.id,member_id:$("txMember").value,category_id:$("txCategory").value||null,amount:Number($("txAmount").value),merchant:$("txMerchant").value.trim()||null,source:"manual"};const {error}=await sb.from("transactions").insert(payload);if(error)return toast(error.message);$("transactionDialog").close();e.target.reset();await loadAll();};
 
-sb.auth.onAuthStateChange(()=>setTimeout(init,0));
+sb.auth.onAuthStateChange((event)=>{
+  if(event==="SIGNED_OUT") show("authView");
+});
 init();
