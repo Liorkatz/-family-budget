@@ -269,16 +269,7 @@ function render(){
       : '<div class="empty-state">אין בקשות הצטרפות ממתינות</div>';
   }
   $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי · ${money(x.amount)}</small></div><div class="mini-actions"><button class="mini-btn" onclick="editIncome('${x.id}')">ערוך</button><button class="mini-btn danger-btn" onclick="deleteIncome('${x.id}','${escapeHtml(x.description)}')">מחק</button></div></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
-  const orderedFixed=[...state.fixed].sort((a,b)=>{
-    const aFilled=Number(a.amount)>0?1:0;
-    const bFilled=Number(b.amount)>0?1:0;
-    if(aFilled!==bFilled)return bFilled-aFilled;
-    const aOrder=Number(a.display_order)||0;
-    const bOrder=Number(b.display_order)||0;
-    if(aOrder!==bOrder)return aOrder-bOrder;
-    return String(a.description||"").localeCompare(String(b.description||""),"he");
-  });
-  $("fixedList").innerHTML=orderedFixed.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||'<div class="empty-state">אין הוצאות קבועות</div>';
+  renderFixedList();
   $("categoriesList").innerHTML=state.categories.map(c=>{const b=state.budgets.find(x=>x.category_id===c.id);return `<div class="settings-row"><div><strong>${escapeHtml(c.name)}</strong><small>${b?"תקציב "+money(b.monthly_limit):"ללא תקציב"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="setBudget('${c.id}','${escapeHtml(c.name)}')">תקציב</button></div></div>`}).join("");
 
   $("txMember").innerHTML=state.members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join("");
@@ -322,17 +313,24 @@ window.deleteMember=async(id,name)=>{
   }
   toast("בן המשפחה נמחק"); await loadAll();
 };
-function renderFixedPreview(){
-  const name=$("fixedDesc").value.trim();
-  const value=$("fixedValue").value;
-  const box=$("fixedPreview");
-  if(!name){box.classList.add("hidden");box.innerHTML="";return;}
-  box.classList.remove("hidden");
-  box.innerHTML=`<div class="preview-label">יופיע ברשימה כך:</div><div class="settings-row preview-row"><div><strong>${escapeHtml(name)}</strong><small>חודשי</small></div><strong>${value?money(Number(value)):money(0)}</strong></div>`;
+function renderFixedList(filterText=""){
+  const q=String(filterText||"").trim().toLocaleLowerCase("he");
+  let rows=[...state.fixed].sort((a,b)=>{
+    const aFilled=Number(a.amount)>0?1:0;
+    const bFilled=Number(b.amount)>0?1:0;
+    if(aFilled!==bFilled)return bFilled-aFilled;
+    const aOrder=Number(a.display_order)||0;
+    const bOrder=Number(b.display_order)||0;
+    if(aOrder!==bOrder)return aOrder-bOrder;
+    return String(a.description||"").localeCompare(String(b.description||""),"he");
+  });
+  if(q){
+    rows=rows.filter(x=>String(x.description||"").toLocaleLowerCase("he").includes(q));
+  }
+  $("fixedList").innerHTML=rows.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||(q?'<div class="empty-state">לא נמצאו סעיפים תואמים</div>':'<div class="empty-state">אין הוצאות קבועות</div>');
 }
-$("fixedDesc").oninput=renderFixedPreview;
-$("fixedValue").oninput=renderFixedPreview;
-$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();renderFixedPreview();await loadAll();};
+$("fixedDesc").oninput=()=>renderFixedList($("fixedDesc").value);
+$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
 window.saveFixed=async(id)=>{const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);toast("ההוצאה עודכנה");await loadAll();};
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
