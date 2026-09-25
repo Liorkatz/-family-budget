@@ -140,7 +140,7 @@ function render(){
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
   $("allTransactions").innerHTML=txHtml(state.transactions);
 
-  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">Shortcut</button>`:""}</div></div>`).join("");
+  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="makeToken('${m.id}','${escapeHtml(m.name)}')">צור טוקן</button>`:""}</div></div>`).join("");
 
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
