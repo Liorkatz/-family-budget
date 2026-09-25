@@ -1211,3 +1211,66 @@ dialog::backdrop{
     right:2px;
   }
 }
+
+
+/* v1.0.27 - edge-to-edge compact bottom nav */
+.shell{
+  padding-bottom:72px;
+}
+
+.bottom-nav{
+  left:0;
+  right:0;
+  bottom:0;
+  border-radius:18px 18px 0 0;
+  padding:3px 6px calc(3px + env(safe-area-inset-bottom));
+  min-height:0;
+}
+
+.bottom-nav button{
+  min-height:44px;
+  height:44px;
+  padding:2px 2px;
+  gap:1px;
+  border-radius:12px;
+  font-size:18px;
+}
+
+.bottom-nav button span{
+  font-size:21px;
+  line-height:1;
+}
+
+.bottom-nav small{
+  font-size:11px;
+  line-height:1;
+  font-weight:600;
+}
+
+.bottom-nav .active{
+  padding:2px 2px;
+  border-radius:12px;
+}
+
+@media(max-width:480px){
+  .shell{
+    padding-bottom:70px;
+  }
+  .bottom-nav{
+    left:0;
+    right:0;
+    bottom:0;
+    padding:3px 5px calc(3px + env(safe-area-inset-bottom));
+    border-radius:16px 16px 0 0;
+  }
+  .bottom-nav button{
+    min-height:42px;
+    height:42px;
+  }
+  .bottom-nav button span{
+    font-size:20px;
+  }
+  .bottom-nav small{
+    font-size:11px;
+  }
+}
