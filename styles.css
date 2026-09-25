@@ -395,3 +395,15 @@ dialog::backdrop{
 @media(max-width:420px){
   .category-pie{height:520px}
 }
+
+/* v1.0.17 - native-app style long press */
+.transaction-editable,
+.transaction-editable *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+.transaction-editable{
+  touch-action:pan-y;
+  -webkit-tap-highlight-color:transparent;
+}
