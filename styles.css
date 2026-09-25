@@ -13,3 +13,29 @@
 .version-badge{appearance:none;border:1px solid #202936;cursor:pointer;pointer-events:auto}
 .version-badge:active{transform:scale(.94)}
 @media(min-width:700px){.category-pie{height:430px}}
+
+.topbar{position:relative;align-items:flex-start}
+.version-badge{
+  position:static!important;
+  order:-1;
+  flex:0 0 auto;
+  margin-top:2px;
+  z-index:auto;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.04em;
+  color:#9aa6b5;
+  background:#0f151d;
+  border:1px solid #26303d;
+  border-radius:999px;
+  padding:6px 9px;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  cursor:pointer;
+  pointer-events:auto;
+}
+.version-badge:active{transform:scale(.95)}
+.category-pie{height:455px}
+@media(max-width:420px){
+  .category-pie{height:490px}
+}
