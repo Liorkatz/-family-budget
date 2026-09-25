@@ -11,13 +11,13 @@
   "description": "Family budget and expense management",
   "icons": [
     {
-      "src": "./icon-192-v46.png",
+      "src": "./icon-192-v47.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon-512-v46.png",
+      "src": "./icon-512-v47.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

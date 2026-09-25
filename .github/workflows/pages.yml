@@ -30,10 +30,10 @@ jobs:
           python -m pip install --quiet pillow
           python - <<'PY'
           from PIL import Image
-          src = Image.open("app-icon-master-v45.png").convert("RGB")
+          src = Image.open("app-icon-master-v47.png").convert("RGB")
           for size in (64, 180, 192, 512):
               out = src.resize((size, size), Image.Resampling.LANCZOS)
-              path = f"icon-{size}-v46.png"
+              path = f"icon-{size}-v47.png"
               out.save(path, "PNG", optimize=True)
               verify = Image.open(path)
               verify.load()
