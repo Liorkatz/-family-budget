@@ -483,7 +483,7 @@ function bindTransactionLongPress(container){
     row.addEventListener("mousemove",()=>{moved=true;cancel();});
     row.addEventListener("mouseup",cancel);
     row.addEventListener("mouseleave",cancel);
-    row.addEventListener("contextmenu",e=>{e.preventDefault();editTransaction(row.dataset.txId);});
+    row.addEventListener("contextmenu",e=>{e.preventDefault();e.stopPropagation();});
   });
 }
 
