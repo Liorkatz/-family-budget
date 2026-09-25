@@ -45,3 +45,10 @@
 .transaction-main{width:100%}
 .amount-under-name{margin-top:3px;font-size:17px}
 .transaction-main small{display:block;margin-top:4px}
+
+.version-footer{display:flex;justify-content:center;padding:18px 0 8px}
+.version-footer .version-badge{
+  position:static!important;
+  margin:0;
+  order:initial;
+}
