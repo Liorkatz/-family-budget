@@ -1274,3 +1274,50 @@ dialog::backdrop{
     font-size:11px;
   }
 }
+
+
+/* v1.0.28 - lower nav content, larger labels */
+.bottom-nav{
+  bottom:0;
+  padding-top:2px;
+  padding-bottom:max(1px,calc(env(safe-area-inset-bottom) - 10px));
+}
+
+.bottom-nav button{
+  min-height:44px;
+  height:44px;
+  transform:translateY(3px);
+}
+
+.bottom-nav .active{
+  min-height:44px;
+  height:44px;
+  transform:translateY(3px);
+}
+
+.bottom-nav button span{
+  font-size:21px;
+}
+
+.bottom-nav small{
+  font-size:13px;
+  font-weight:700;
+  line-height:1.05;
+}
+
+@media(max-width:480px){
+  .bottom-nav{
+    bottom:0;
+    padding-top:2px;
+    padding-bottom:max(1px,calc(env(safe-area-inset-bottom) - 10px));
+  }
+  .bottom-nav button,
+  .bottom-nav .active{
+    min-height:42px;
+    height:42px;
+    transform:translateY(3px);
+  }
+  .bottom-nav small{
+    font-size:13px;
+  }
+}
