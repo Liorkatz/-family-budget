@@ -206,21 +206,51 @@ $("closeTokenDialog").onclick=()=>$("tokenDialog").close();
 $("copyToken").onclick=async()=>{await navigator.clipboard.writeText($("tokenValue").value);toast("ה־Token הועתק");};
 
 $("testTransaction").onclick=async()=>{
-  const payload={
-    family_id:state.family.id,
-    member_id:state.me.id,
-    category_id:null,
-    amount:12.34,
-    currency:"ILS",
-    merchant:"TEST - Shortcut Simulation",
-    source:"apple_pay",
-    occurred_at:new Date().toISOString(),
-    external_id:"test-"+Date.now()
-  };
-  const {error}=await sb.from("transactions").insert(payload);
-  if(error)return toast(error.message);
-  toast("עסקת בדיקה של ₪12.34 נוספה");
-  await loadAll();
+  if(!state.members.length)return toast("אין בני משפחה");
+  $("testTransaction").disabled=true;
+  const merchants=[
+    "שופרסל","רמי לוי","ויקטורי","סופר-פארם","Wolt",
+    "McDonald's","ארומה","Yellow","פז","Gett",
+    "FOX","ZARA","KSP","ACE","IKEA",
+    "Cinema City","גולדה","Be","סטימצקי","מקס סטוק"
+  ];
+  const preferredCats=[
+    "סופר","בריאות","אוכל בחוץ","רכב","קניות",
+    "בילויים","ילדים","חשבונות","אחר"
+  ];
+  const categoryByName=Object.fromEntries(state.categories.map(c=>[c.name,c.id]));
+  const now=new Date();
+  const rows=[];
+  state.members.forEach((member,memberIndex)=>{
+    for(let n=0;n<20;n++){
+      const d=new Date(now);
+      const dayOffset=(n*2+memberIndex)%Math.max(1,now.getDate());
+      d.setDate(Math.max(1,now.getDate()-dayOffset));
+      d.setHours(8+((n*3+memberIndex)%13), (n*7)%60, 0, 0);
+      const merchant=merchants[(n+memberIndex*4)%merchants.length];
+      const catName=preferredCats[(n+memberIndex)%preferredCats.length];
+      const amount=Number((18.9 + ((n+1)*(memberIndex+2)*13.37)%420).toFixed(2));
+      rows.push({
+        family_id:state.family.id,
+        member_id:member.id,
+        category_id:categoryByName[catName]||null,
+        amount,
+        currency:"ILS",
+        merchant,
+        source:"apple_pay",
+        occurred_at:d.toISOString(),
+        external_id:`demo-${member.id}-${Date.now()}-${n}`
+      });
+    }
+  });
+  try{
+    const {error}=await sb.from("transactions").insert(rows);
+    if(error){toast(error.message);return;}
+    toast(`${rows.length} עסקאות בדיקה נוספו`);
+    await loadAll();
+  }finally{
+    $("testTransaction").disabled=false;
+  }
 };
 function goToFixedExpenses(){
   goToFixedExpenses();
