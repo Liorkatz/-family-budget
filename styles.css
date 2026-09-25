@@ -856,3 +856,269 @@ dialog::backdrop{
   .panel{padding:18px}
   .category-pie{height:520px}
 }
+
+
+/* v1.0.23 - stronger glass cards, larger centered content */
+:root{
+  --glass-bg:rgba(20,29,44,.82);
+  --glass-bg-strong:rgba(18,27,41,.92);
+  --glass-border:rgba(255,255,255,.14);
+  --glass-border-strong:rgba(255,255,255,.20);
+}
+
+.hero-card,
+.stat-card,
+.panel,
+.settings-card,
+.auth-card,
+.dialog-card{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)),
+    var(--glass-bg);
+  border-color:var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 14px 34px rgba(0,0,0,.28);
+}
+
+.hero-card{
+  text-align:center;
+  padding:28px 24px;
+  background:
+    radial-gradient(280px 180px at 10% 0%,rgba(103,124,255,.30),transparent 72%),
+    radial-gradient(260px 180px at 100% 10%,rgba(255,132,165,.20),transparent 72%),
+    linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04)),
+    rgba(18,27,42,.92);
+}
+
+.hero-card p{
+  font-size:17px;
+}
+
+.hero-amount{
+  font-size:50px;
+  line-height:1.05;
+}
+
+.hero-sub{
+  font-size:15px;
+  line-height:1.55;
+  max-width:90%;
+  margin:0 auto;
+}
+
+.stat-card{
+  min-height:126px;
+  padding:20px 16px;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035)),
+    rgba(18,27,42,.88);
+}
+
+.stat-card span{
+  font-size:15px;
+  line-height:1.35;
+  text-align:center;
+}
+
+.stat-card strong{
+  margin-top:10px;
+  font-size:28px;
+  line-height:1.15;
+  text-align:center;
+}
+
+.stats-grid .stat-card:nth-child(1){
+  background:
+    radial-gradient(180px 120px at 50% 0%,rgba(56,211,159,.22),transparent 72%),
+    linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035)),
+    rgba(18,27,42,.90);
+}
+.stats-grid .stat-card:nth-child(2){
+  background:
+    radial-gradient(180px 120px at 50% 0%,rgba(255,108,123,.21),transparent 72%),
+    linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035)),
+    rgba(18,27,42,.90);
+}
+.stats-grid .stat-card:nth-child(3){
+  background:
+    radial-gradient(180px 120px at 50% 0%,rgba(114,134,255,.25),transparent 72%),
+    linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035)),
+    rgba(18,27,42,.90);
+}
+.stats-grid .stat-card:nth-child(4){
+  background:
+    radial-gradient(180px 120px at 50% 0%,rgba(255,195,90,.22),transparent 72%),
+    linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035)),
+    rgba(18,27,42,.90);
+}
+
+.panel{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.03)),
+    rgba(16,25,39,.88);
+  border-color:rgba(255,255,255,.13);
+}
+
+.panel-head{
+  justify-content:center;
+  text-align:center;
+}
+
+.panel-head > div{
+  width:100%;
+  text-align:center;
+}
+
+.panel-head .eyebrow{
+  font-size:13px;
+}
+
+.panel h2{
+  font-size:30px;
+  text-align:center;
+}
+
+.settings-card{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.03)),
+    rgba(16,25,39,.90);
+  border-color:rgba(255,255,255,.13);
+}
+
+.settings-card summary{
+  text-align:center;
+  font-size:20px;
+  padding:20px 0;
+}
+
+.settings-card > .muted,
+.settings-card > .compact{
+  text-align:center;
+  font-size:15px;
+}
+
+.transaction-row,
+.settings-row{
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;
+  background:rgba(11,18,29,.56);
+  padding:15px 14px;
+  margin-bottom:8px;
+}
+
+.transaction-main{
+  text-align:center;
+}
+
+.transaction-main strong{
+  font-size:18px;
+}
+
+.amount-under-name{
+  font-size:21px;
+}
+
+.transaction-main small{
+  font-size:13px;
+  line-height:1.45;
+}
+
+.settings-row{
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:10px;
+}
+
+.settings-row > div:first-child,
+.settings-row > span,
+.settings-row > strong{
+  text-align:center;
+}
+
+.settings-row strong{
+  font-size:18px;
+}
+
+.settings-row small{
+  font-size:13px;
+}
+
+.fixed-edit{
+  width:100%;
+  justify-content:center;
+}
+
+.fixed-edit input{
+  width:130px;
+  text-align:center;
+}
+
+.mini-actions{
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.family-code-box{
+  flex-direction:column;
+  justify-content:center;
+  text-align:center;
+}
+
+.inline-form,
+.inline-form.three{
+  align-items:center;
+}
+
+.page-title{
+  justify-content:center;
+  text-align:center;
+}
+
+.page-title > div:first-child{
+  width:100%;
+  text-align:center;
+}
+
+.page-title h2{
+  font-size:30px;
+}
+
+.page-title .eyebrow{
+  font-size:13px;
+}
+
+.category-pie{
+  border-color:rgba(255,255,255,.11);
+  background:
+    radial-gradient(circle at 50% 47%,rgba(84,101,145,.30),transparent 30%),
+    radial-gradient(circle at 50% 50%,rgba(22,33,50,.90),rgba(10,15,24,.95) 64%,rgba(6,9,15,.99) 100%);
+}
+
+.bottom-nav{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.03)),
+    rgba(9,15,24,.94);
+  border-color:rgba(255,255,255,.12);
+}
+
+.bottom-nav button{
+  font-size:20px;
+}
+
+.bottom-nav small{
+  font-size:12px;
+}
+
+@media(max-width:480px){
+  .stat-card{min-height:118px}
+  .stat-card span{font-size:14px}
+  .stat-card strong{font-size:25px}
+  .panel h2,.page-title h2{font-size:27px}
+  .settings-card summary{font-size:19px}
+}
