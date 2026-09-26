@@ -1097,4 +1097,20 @@ $("transactionForm").onsubmit=async(e)=>{
 sb.auth.onAuthStateChange((event)=>{
   if(event==="SIGNED_OUT") show("authView");
 });
+
+let externalRefreshBusy=false;
+async function refreshVisibleAppData(){
+  if(document.visibilityState!=="visible" || externalRefreshBusy || !state.family?.id || $("appView")?.classList.contains("hidden")) return;
+  externalRefreshBusy=true;
+  try{
+    await loadAll();
+  }catch(err){
+    console.warn("External data refresh failed",err);
+  }finally{
+    externalRefreshBusy=false;
+  }
+}
+document.addEventListener("visibilitychange",refreshVisibleAppData);
+window.addEventListener("focus",refreshVisibleAppData);
+
 init();
