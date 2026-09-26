@@ -1977,3 +1977,29 @@ dialog::backdrop{
     border-radius:17px;
   }
 }
+
+
+/* v1.0.56 - analysis map category colors */
+.map-popup-name{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+}
+.map-popup-color{
+  width:9px;
+  height:9px;
+  flex:0 0 9px;
+  display:inline-block;
+  border-radius:50%;
+  box-shadow:0 0 0 2px rgba(255,255,255,.13);
+}
+.purchase-map-dot{
+  transition:transform .16s ease,box-shadow .16s ease;
+}
+.purchase-map-dot:active{
+  transform:scale(.9);
+}
+#analysisPage .map-panel{
+  margin-bottom:14px;
+}
