@@ -1113,14 +1113,4 @@ async function refreshVisibleAppData(){
 document.addEventListener("visibilitychange",refreshVisibleAppData);
 window.addEventListener("focus",refreshVisibleAppData);
 
-function syncVisualViewportBottom(){
-  const vv=window.visualViewport;
-  const gap=vv?Math.max(0,window.innerHeight-(vv.height+vv.offsetTop)):0;
-  document.documentElement.style.setProperty("--visual-viewport-bottom-gap",`${Math.round(gap)}px`);
-}
-syncVisualViewportBottom();
-window.addEventListener("resize",syncVisualViewportBottom,{passive:true});
-window.visualViewport?.addEventListener("resize",syncVisualViewportBottom,{passive:true});
-window.visualViewport?.addEventListener("scroll",syncVisualViewportBottom,{passive:true});
-
 init();
