@@ -42,6 +42,123 @@ let categoryPieChart = null;
 let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
+
+let incomeRevealed=false;
+let incomeUnlockBusy=false;
+
+const incomeCredentialStorageKey=()=>`familyBudgetIncomeCredential:${state.me?.id||"default"}`;
+
+function syncIncomePrivacy(){
+  const amount=$("incomeAmount");
+  const card=$("incomeStatCard");
+  const hint=$("incomeLockHint");
+  if(!amount||!card)return;
+  amount.classList.toggle("income-blurred",!incomeRevealed);
+  card.classList.toggle("income-revealed",incomeRevealed);
+  card.setAttribute("aria-label",incomeRevealed?"הכנסות מוצגות. לחץ להסתרה":"הכנסות מוסתרות. לחץ להצגה");
+  if(hint)hint.textContent=incomeRevealed?"👁":"🔒";
+}
+
+function toBase64Url(buffer){
+  let binary="";
+  new Uint8Array(buffer).forEach(byte=>binary+=String.fromCharCode(byte));
+  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+
+function fromBase64Url(value){
+  const base64=String(value||"").replace(/-/g,"+").replace(/_/g,"/");
+  const padded=base64+"=".repeat((4-base64.length%4)%4);
+  const binary=atob(padded);
+  return Uint8Array.from(binary,ch=>ch.charCodeAt(0)).buffer;
+}
+
+async function verifyDeviceForIncome(){
+  if(!window.isSecureContext || !window.PublicKeyCredential || !navigator.credentials){
+    return {supported:false,ok:true};
+  }
+
+  let platformAvailable=false;
+  try{
+    platformAvailable=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  }catch(_){}
+  if(!platformAvailable)return {supported:false,ok:true};
+
+  const key=incomeCredentialStorageKey();
+  const saved=localStorage.getItem(key);
+  const challenge=crypto.getRandomValues(new Uint8Array(32));
+
+  try{
+    if(saved){
+      const assertion=await navigator.credentials.get({
+        publicKey:{
+          challenge,
+          allowCredentials:[{type:"public-key",id:fromBase64Url(saved),transports:["internal"]}],
+          userVerification:"required",
+          timeout:60000
+        }
+      });
+      return {supported:true,ok:Boolean(assertion)};
+    }
+
+    const credential=await navigator.credentials.create({
+      publicKey:{
+        challenge,
+        rp:{name:"Family Budget"},
+        user:{
+          id:crypto.getRandomValues(new Uint8Array(24)),
+          name:"family-budget-income",
+          displayName:"הצגת הכנסות"
+        },
+        pubKeyCredParams:[
+          {type:"public-key",alg:-7},
+          {type:"public-key",alg:-257}
+        ],
+        authenticatorSelection:{
+          authenticatorAttachment:"platform",
+          userVerification:"required",
+          residentKey:"discouraged",
+          requireResidentKey:false
+        },
+        timeout:60000,
+        attestation:"none"
+      }
+    });
+    if(!credential)return {supported:true,ok:false};
+    localStorage.setItem(key,toBase64Url(credential.rawId));
+    return {supported:true,ok:true};
+  }catch(err){
+    if(err?.name==="NotFoundError"&&saved)localStorage.removeItem(key);
+    return {supported:true,ok:false,cancelled:err?.name==="NotAllowedError"};
+  }
+}
+
+async function toggleIncomeVisibility(){
+  if(incomeUnlockBusy)return;
+
+  if(incomeRevealed){
+    incomeRevealed=false;
+    syncIncomePrivacy();
+    return;
+  }
+
+  incomeUnlockBusy=true;
+  const card=$("incomeStatCard");
+  card?.classList.add("income-unlocking");
+  try{
+    const result=await verifyDeviceForIncome();
+    if(!result.ok){
+      if(!result.cancelled)toast("לא ניתן לאמת את המכשיר");
+      return;
+    }
+    incomeRevealed=true;
+    syncIncomePrivacy();
+    if(!result.supported)toast("אימות ביומטרי לא זמין במכשיר הזה");
+  }finally{
+    incomeUnlockBusy=false;
+    card?.classList.remove("income-unlocking");
+  }
+}
+
 let analysisMode="summary";
 let purchaseMap=null;
 let purchaseMapLayer=null;
