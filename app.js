@@ -649,10 +649,12 @@ function render(){
 
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
-    const visibleCode=sessionStorage.getItem("familyCode");
-    const codeHint=state.adminInfo?.codeHint||null;
-    $("familyCodeHint").textContent=visibleCode || (codeHint ? `•••${codeHint}` : "לא הוגדר");
-    if($("familyCodeLabel")) $("familyCodeLabel").textContent=visibleCode?"קוד משפחה נוכחי":"סיומת הקוד השמור";
+    const firstChar=state.adminInfo?.codeFirstChar||"";
+    const lastChar=state.adminInfo?.codeLastChar||"";
+    const codeLength=Number(state.adminInfo?.codeLength||0);
+    const maskedCode=(firstChar&&lastChar&&codeLength>=2)?firstChar+"*".repeat(Math.max(0,codeLength-2))+lastChar:"לא הוגדר";
+    $("familyCodeHint").textContent=maskedCode;
+    if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה";
     const pending=state.adminInfo?.pending||[];
     $("pendingRequests").classList.toggle("hidden",!pending.length);
     $("pendingRequests").innerHTML=pending.length
