@@ -42,6 +42,123 @@ let categoryPieChart = null;
 let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
+let analysisMode="summary";
+let purchaseMap=null;
+let purchaseMapLayer=null;
+let manualTransactionLocation=null;
+
+function roundGeneralLocation(value){
+  return Math.round(Number(value)*1000)/1000;
+}
+
+function setManualLocationStatus(){
+  const status=$("txLocationStatus");
+  const clear=$("clearTxLocation");
+  if(!status||!clear)return;
+  if(manualTransactionLocation){
+    status.textContent="מיקום צורף ✓";
+    clear.classList.remove("hidden");
+  }else{
+    status.textContent="ללא מיקום";
+    clear.classList.add("hidden");
+  }
+}
+
+function captureCurrentPhoneLocation(){
+  if(!navigator.geolocation){
+    toast("שירות מיקום לא זמין במכשיר הזה");
+    return;
+  }
+  const btn=$("captureTxLocation");
+  btn.disabled=true;
+  btn.textContent="מאתר מיקום…";
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      manualTransactionLocation={
+        latitude:roundGeneralLocation(pos.coords.latitude),
+        longitude:roundGeneralLocation(pos.coords.longitude)
+      };
+      setManualLocationStatus();
+      btn.disabled=false;
+      btn.textContent="📍 עדכן את מיקום הטלפון";
+    },
+    (err)=>{
+      btn.disabled=false;
+      btn.textContent="📍 צרף את מיקום הטלפון";
+      toast(err?.code===1?"אין הרשאת מיקום":"לא הצלחתי לקבל מיקום");
+    },
+    {enableHighAccuracy:false,timeout:10000,maximumAge:30000}
+  );
+}
+
+function setAnalysisMode(mode){
+  analysisMode=mode==="map"?"map":"summary";
+  $("analysisSummaryView")?.classList.toggle("hidden",analysisMode!=="summary");
+  $("analysisMapView")?.classList.toggle("hidden",analysisMode!=="map");
+  $("analysisSummaryTab")?.classList.toggle("active",analysisMode==="summary");
+  $("analysisMapTab")?.classList.toggle("active",analysisMode==="map");
+  if(analysisMode==="map") setTimeout(renderPurchaseMap,80);
+}
+
+function renderPurchaseMap(){
+  const mapEl=$("purchaseMap");
+  if(!mapEl || !window.L || analysisMode!=="map")return;
+
+  const located=state.transactions.filter(t=>Number.isFinite(Number(t.latitude))&&Number.isFinite(Number(t.longitude)));
+  const missing=Math.max(0,state.transactions.length-located.length);
+  $("mapLocationCount").textContent=located.length;
+  $("mapLocationMeta").textContent=located.length
+    ? `${located.length} עסקאות עם מיקום · ${missing} ללא מיקום · ${monthName()}`
+    : `אין עסקאות עם מיקום ב${monthName()}`;
+
+  if(purchaseMap){
+    purchaseMap.remove();
+    purchaseMap=null;
+  }
+
+  purchaseMap=L.map(mapEl,{zoomControl:true,attributionControl:true});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,
+    attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(purchaseMap);
+
+  if(!located.length){
+    purchaseMap.setView([31.929,34.800],13);
+    return;
+  }
+
+  const groups=new Map();
+  located.forEach(t=>{
+    const lat=Number(t.latitude), lng=Number(t.longitude);
+    const key=`${lat.toFixed(3)},${lng.toFixed(3)}`;
+    if(!groups.has(key))groups.set(key,{lat,lng,rows:[]});
+    groups.get(key).rows.push(t);
+  });
+
+  const bounds=[];
+  groups.forEach(group=>{
+    bounds.push([group.lat,group.lng]);
+    const total=group.rows.reduce((sum,t)=>sum+Number(t.amount||0),0);
+    const lines=group.rows
+      .slice()
+      .sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at))
+      .map(t=>`<div class="map-popup-row"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><span>${money(t.amount)}</span></div>`)
+      .join("");
+    const popup=`<div class="map-popup"><div class="map-popup-title">${group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור"}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
+    L.circleMarker([group.lat,group.lng],{
+      radius:9,
+      weight:3,
+      color:"#ffffff",
+      fillColor:"#6F82F5",
+      fillOpacity:.92
+    }).addTo(purchaseMap).bindPopup(popup,{maxWidth:280});
+  });
+
+  if(bounds.length===1)purchaseMap.setView(bounds[0],16);
+  else purchaseMap.fitBounds(bounds,{padding:[28,28],maxZoom:16});
+  setTimeout(()=>purchaseMap?.invalidateSize(),80);
+}
+
 let incomeRevealed=false;
 let incomeUnlockBusy=false;
 
@@ -262,6 +379,7 @@ $("nextMonth").onclick=()=>moveMonth(1);
 function openPage(pageId){
   document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
   document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===pageId));
+  if(pageId==="analysisPage"&&analysisMode==="map")setTimeout(renderPurchaseMap,80);
 }
 document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.onclick=()=>{
   openPage(btn.dataset.page);
@@ -471,7 +589,7 @@ function render(){
 
   renderCategoryPie();
 
-  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
+  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}${t.latitude!=null&&t.longitude!=null?" · 📍":""}</small></div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
   bindTransactionLongPress($("recentTransactions"));
   renderTransactionSearch();
@@ -503,6 +621,7 @@ function render(){
   const byMember={};state.transactions.forEach(t=>{const k=t.members?.name||"לא ידוע";byMember[k]=(byMember[k]||0)+Number(t.amount)});
   $("memberBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>הוצאות לפי בן משפחה</strong></div>'+Object.entries(byMember).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`<div class="settings-row"><span>${escapeHtml(n)}</span><strong>${money(v)}</strong></div>`).join("")+'</div>';
   $("budgetBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>ניצול תקציבים</strong></div>'+state.budgets.map(b=>{const used=state.transactions.filter(t=>t.category_id===b.category_id).reduce((s,t)=>s+Number(t.amount),0);const pct=Math.min(100,Math.round(used/Number(b.monthly_limit)*100)||0);return `<div style="margin:14px 0"><div class="bar-label"><span>${escapeHtml(b.categories?.name||"קטגוריה")}</span><strong>${money(used)} / ${money(b.monthly_limit)}</strong></div><div class="progress"><i style="width:${pct}%"></i></div></div>`}).join("")+'</div>';
+  if(analysisMode==="map")setTimeout(renderPurchaseMap,80);
 }
 
 $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
@@ -634,45 +753,41 @@ $("copyToken").onclick=async()=>{await navigator.clipboard.writeText($("tokenVal
 $("testTransaction").onclick=async()=>{
   if(!state.members.length)return toast("אין בני משפחה");
   $("testTransaction").disabled=true;
-  const merchants=[
-    "שופרסל","רמי לוי","ויקטורי","סופר-פארם","Wolt",
-    "McDonald's","ארומה","Yellow","פז","Gett",
-    "FOX","ZARA","KSP","ACE","IKEA",
-    "Cinema City","גולדה","Be","סטימצקי","מקס סטוק"
-  ];
-  const preferredCats=[
-    "סופר","בריאות","אוכל בחוץ","רכב","קניות",
-    "בילויים","ילדים","חשבונות","אחר"
+  const merchants=["שופרסל","ארומה","סופר-פארם","Yellow","ויקטורי","גולדה","מקס סטוק","KSP","FOX","קפה לנדוור","Wolt","Gett"];
+  const preferredCats=["סופר","אוכל בחוץ","בריאות","רכב","סופר","אוכל בחוץ","קניות","קניות","קניות","אוכל בחוץ","אוכל בחוץ","רכב"];
+  const locations=[
+    [31.930,34.800],[31.929,34.798],[31.927,34.801],[31.932,34.794],
+    [31.925,34.804],[31.929,34.803],[31.923,34.799],[31.934,34.802]
   ];
   const categoryByName=Object.fromEntries(state.categories.map(c=>[c.name,c.id]));
   const now=new Date();
   const rows=[];
-  state.members.forEach((member,memberIndex)=>{
-    for(let n=0;n<20;n++){
-      const d=new Date(now);
-      const dayOffset=(n*2+memberIndex)%Math.max(1,now.getDate());
-      d.setDate(Math.max(1,now.getDate()-dayOffset));
-      d.setHours(8+((n*3+memberIndex)%13), (n*7)%60, 0, 0);
-      const merchant=merchants[(n+memberIndex*4)%merchants.length];
-      const catName=preferredCats[(n+memberIndex)%preferredCats.length];
-      const amount=Number((18.9 + ((n+1)*(memberIndex+2)*13.37)%420).toFixed(2));
-      rows.push({
-        family_id:state.family.id,
-        member_id:member.id,
-        category_id:categoryByName[catName]||null,
-        amount,
-        currency:"ILS",
-        merchant,
-        source:"apple_pay",
-        occurred_at:d.toISOString(),
-        external_id:`demo-${member.id}-${Date.now()}-${n}`
-      });
-    }
-  });
+  for(let n=0;n<12;n++){
+    const member=state.members[n%state.members.length];
+    const d=new Date(now);
+    d.setDate(Math.max(1,now.getDate()-((n*2)%Math.max(1,now.getDate()))));
+    d.setHours(8+((n*3)%13),(n*7)%60,0,0);
+    const hasLocation=n<8;
+    const loc=hasLocation?locations[n%locations.length]:null;
+    rows.push({
+      family_id:state.family.id,
+      member_id:member.id,
+      category_id:categoryByName[preferredCats[n]]||null,
+      amount:Number((29.9+(n*37.35)%310).toFixed(2)),
+      currency:"ILS",
+      merchant:merchants[n],
+      source:"apple_pay",
+      occurred_at:d.toISOString(),
+      external_id:`demo-${Date.now()}-${n}`,
+      latitude:loc?.[0]??null,
+      longitude:loc?.[1]??null,
+      location_source:loc?"test":null
+    });
+  }
   try{
     const {error}=await sb.from("transactions").insert(rows);
     if(error){toast(error.message);return;}
-    toast(`${rows.length} עסקאות בדיקה נוספו`);
+    toast("נוספו 12 עסקאות בדיקה: 8 עם מיקום ו־4 בלי");
     await loadAll();
   }finally{
     $("testTransaction").disabled=false;
@@ -748,7 +863,10 @@ $("deleteTransaction").onclick=async()=>{
     merchant:current.merchant||null,
     source:current.source||"manual",
     occurred_at:current.occurred_at,
-    external_id:current.external_id||null
+    external_id:current.external_id||null,
+    latitude:current.latitude??null,
+    longitude:current.longitude??null,
+    location_source:current.location_source??null
   };
   const {error}=await sb.from("transactions").delete().eq("id",id);
   if(error)return toast(error.message);
@@ -840,9 +958,42 @@ $("incomeStatCard").onkeydown=(e)=>{
   }
 };
 
-$("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
+$("openAddTransaction").onclick=()=>{
+  manualTransactionLocation=null;
+  setManualLocationStatus();
+  $("captureTxLocation").textContent="📍 צרף את מיקום הטלפון";
+  $("transactionDialog").showModal();
+};
 $("closeTransactionDialog").onclick=()=>$("transactionDialog").close();
-$("transactionForm").onsubmit=async(e)=>{e.preventDefault();const payload={family_id:state.family.id,member_id:$("txMember").value,category_id:$("txCategory").value||null,amount:Number($("txAmount").value),merchant:$("txMerchant").value.trim()||null,source:"manual"};const {error}=await sb.from("transactions").insert(payload);if(error)return toast(error.message);$("transactionDialog").close();e.target.reset();await loadAll();};
+$("captureTxLocation").onclick=captureCurrentPhoneLocation;
+$("clearTxLocation").onclick=()=>{
+  manualTransactionLocation=null;
+  setManualLocationStatus();
+  $("captureTxLocation").textContent="📍 צרף את מיקום הטלפון";
+};
+$("analysisSummaryTab").onclick=()=>setAnalysisMode("summary");
+$("analysisMapTab").onclick=()=>setAnalysisMode("map");
+$("transactionForm").onsubmit=async(e)=>{
+  e.preventDefault();
+  const payload={
+    family_id:state.family.id,
+    member_id:$("txMember").value,
+    category_id:$("txCategory").value||null,
+    amount:Number($("txAmount").value),
+    merchant:$("txMerchant").value.trim()||null,
+    source:"manual",
+    latitude:manualTransactionLocation?.latitude??null,
+    longitude:manualTransactionLocation?.longitude??null,
+    location_source:manualTransactionLocation?"manual":null
+  };
+  const {error}=await sb.from("transactions").insert(payload);
+  if(error)return toast(error.message);
+  $("transactionDialog").close();
+  e.target.reset();
+  manualTransactionLocation=null;
+  setManualLocationStatus();
+  await loadAll();
+};
 
 sb.auth.onAuthStateChange((event)=>{
   if(event==="SIGNED_OUT") show("authView");
