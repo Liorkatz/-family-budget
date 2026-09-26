@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=53" />
+  <link rel="stylesheet" href="./styles.css?v=55" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.54</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.55</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -124,27 +124,21 @@
 
       <section id="analysisPage" class="page">
         <div class="page-title"><div><p class="eyebrow">ניתוח</p><h2>תמונת מצב</h2></div></div>
-        <div class="analysis-tabs" role="tablist" aria-label="תצוגת ניתוח">
-          <button id="analysisSummaryTab" class="analysis-tab active" type="button">סיכום</button>
-          <button id="analysisMapTab" class="analysis-tab" type="button">מפה</button>
-        </div>
-        <div id="analysisSummaryView">
-          <section class="panel"><div id="memberBreakdown"></div></section>
-          <section class="panel"><div id="budgetBreakdown"></div></section>
-        </div>
-        <div id="analysisMapView" class="hidden">
-          <section class="panel map-panel">
-            <div class="map-head">
-              <div>
-                <p class="eyebrow">רכישות עם מיקום</p>
-                <h3>מפת הוצאות</h3>
-              </div>
-              <strong id="mapLocationCount">0</strong>
+
+        <section class="panel map-panel">
+          <div class="map-head">
+            <div>
+              <p class="eyebrow">רכישות עם מיקום</p>
+              <h3>מפת הוצאות</h3>
             </div>
-            <div id="purchaseMap" aria-label="מפת רכישות"></div>
-            <div id="mapLocationMeta" class="map-meta"></div>
-          </section>
-        </div>
+            <strong id="mapLocationCount">0</strong>
+          </div>
+          <div id="purchaseMap" aria-label="מפת רכישות"></div>
+          <div id="mapLocationMeta" class="map-meta"></div>
+        </section>
+
+        <section class="panel"><div id="memberBreakdown"></div></section>
+        <section class="panel"><div id="budgetBreakdown"></div></section>
       </section>
 
       <section id="settingsPage" class="page">
@@ -258,6 +252,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=54"></script>
+  <script src="./app.js?v=55"></script>
 </body>
 </html>
