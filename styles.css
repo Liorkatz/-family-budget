@@ -1954,9 +1954,6 @@ dialog::backdrop{
 
 
 /* v1.0.65 - deterministic iOS bottom nav */
-:root{
-  --visual-viewport-bottom-gap:0px;
-}
 html,body{
   min-height:100%;
   min-height:100dvh;
@@ -1967,7 +1964,7 @@ html,body{
 .bottom-nav{
   position:fixed!important;
   top:auto!important;
-  bottom:var(--visual-viewport-bottom-gap)!important;
+  bottom:0!important;
   left:0!important;
   right:0!important;
   width:100%!important;
@@ -1985,4 +1982,16 @@ html,body{
     width:min(780px,100%)!important;
     transform:translateX(-50%)!important;
   }
+}
+
+
+/* v1.0.66 - keep bottom nav anchored during iOS rubber-band overscroll */
+html,body{
+  overscroll-behavior-y:none;
+}
+.bottom-nav{
+  bottom:0!important;
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+  will-change:transform;
 }
