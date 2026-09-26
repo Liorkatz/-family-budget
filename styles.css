@@ -1880,17 +1880,33 @@ dialog::backdrop{
   background:#111927;
   border:1px solid rgba(255,255,255,.10);
 }
-#purchaseMap .leaflet-control-attribution{
+#purchaseMap .maplibregl-ctrl-attrib{
   font-size:9px;
 }
-#purchaseMap .leaflet-popup-content-wrapper,
-#purchaseMap .leaflet-popup-tip{
+#purchaseMap .maplibregl-popup-content{
   background:#111927;
   color:#f5f8ff;
-}
-#purchaseMap .leaflet-popup-content{
-  margin:12px 14px;
+  padding:12px 14px;
+  border-radius:14px;
   direction:rtl;
+  box-shadow:0 12px 30px rgba(0,0,0,.34);
+}
+#purchaseMap .maplibregl-popup-close-button{
+  color:#cbd5e5;
+  font-size:18px;
+  padding:3px 7px;
+}
+#purchaseMap .maplibregl-popup-tip{
+  border-top-color:#111927;
+}
+.purchase-map-dot{
+  width:18px;
+  height:18px;
+  padding:0;
+  border:3px solid #fff;
+  border-radius:50%;
+  background:#6F82F5;
+  box-shadow:0 4px 14px rgba(0,0,0,.38);
 }
 .map-popup{
   min-width:190px;
