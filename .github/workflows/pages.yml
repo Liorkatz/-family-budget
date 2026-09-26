@@ -20,30 +20,26 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Generate icon sizes from selected master
+
+      - name: Prepare minimal site artifact
         run: |
-          python -m pip install --quiet pillow
-          python - <<'PY'
-          from PIL import Image
-          src = Image.open("app-icon-master-v47.png").convert("RGB")
-          for size in (64, 180, 192, 512):
-              out = src.resize((size, size), Image.Resampling.LANCZOS)
-              path = f"icon-{size}-v47.png"
-              out.save(path, "PNG", optimize=True)
-              verify = Image.open(path)
-              verify.load()
-              assert verify.size == (size, size)
-              print(f"Generated {path}: {verify.size}")
-          PY
+          mkdir -p _site
+          cp index.html app.js styles.css config.js manifest.webmanifest icon-180-v48.png _site/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: "."
+          path: "_site"
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
