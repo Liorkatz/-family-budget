@@ -207,10 +207,29 @@ function captureCurrentPhoneLocation(){
   );
 }
 
-function renderPurchaseMap(){
+let mapRtlTextReady=null;
+async function ensureMapRtlTextSupport(){
+  if(!window.maplibregl?.setRTLTextPlugin)return;
+  const status=window.maplibregl.getRTLTextPluginStatus?.();
+  if(status==="loaded")return;
+  if(!mapRtlTextReady){
+    mapRtlTextReady=window.maplibregl
+      .setRTLTextPlugin("https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js",false)
+      .catch((err)=>{
+        mapRtlTextReady=null;
+        console.warn("RTL map text plugin failed to load",err);
+      });
+  }
+  await mapRtlTextReady;
+}
+
+async function renderPurchaseMap(){
   const mapEl=$("purchaseMap");
   const analysisPage=$("analysisPage");
   if(!mapEl || !window.maplibregl || !analysisPage?.classList.contains("active"))return;
+
+  await ensureMapRtlTextSupport();
+  if(!analysisPage?.classList.contains("active"))return;
 
   const located=state.transactions.filter(t=>Number.isFinite(Number(t.latitude))&&Number.isFinite(Number(t.longitude)));
   const missing=Math.max(0,state.transactions.length-located.length);
