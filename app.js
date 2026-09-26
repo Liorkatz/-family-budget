@@ -480,7 +480,7 @@ async function loadAll(){
   const [members,cats,txs,incomes,fixed,budgets]=await Promise.all([
     sb.from("members").select("*").eq("family_id",f).order("created_at"),
     sb.from("categories").select("*").eq("family_id",f).order("name"),
-    sb.from("transactions").select("*,members(name),categories(name)").eq("family_id",f).gte("occurred_at",monthStart()).lt("occurred_at",monthEnd()).order("occurred_at",{ascending:false}),
+    sb.from("transactions").select("*,members(name),categories(name)").eq("family_id",f).gte("occurred_at",monthStart()).lt("occurred_at",monthEnd()).order("created_at",{ascending:false}).order("occurred_at",{ascending:false}),
     sb.from("incomes").select("*").eq("family_id",f).eq("active",true).order("created_at"),
     sb.from("fixed_expenses").select("*,categories(name)").eq("family_id",f).eq("active",true).order("display_order",{ascending:true}).order("created_at",{ascending:true}),
     sb.from("budgets").select("*,categories(name)").eq("family_id",f)
@@ -1112,5 +1112,15 @@ async function refreshVisibleAppData(){
 }
 document.addEventListener("visibilitychange",refreshVisibleAppData);
 window.addEventListener("focus",refreshVisibleAppData);
+
+function syncVisualViewportBottom(){
+  const vv=window.visualViewport;
+  const gap=vv?Math.max(0,window.innerHeight-(vv.height+vv.offsetTop)):0;
+  document.documentElement.style.setProperty("--visual-viewport-bottom-gap",`${Math.round(gap)}px`);
+}
+syncVisualViewportBottom();
+window.addEventListener("resize",syncVisualViewportBottom,{passive:true});
+window.visualViewport?.addEventListener("resize",syncVisualViewportBottom,{passive:true});
+window.visualViewport?.addEventListener("scroll",syncVisualViewportBottom,{passive:true});
 
 init();
