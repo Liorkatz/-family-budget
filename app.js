@@ -255,8 +255,7 @@ function renderPurchaseMap(){
   });
 
   const points=[...groups.values()];
-
-  groups.forEach(group=>{
+  const features=points.map((group,index)=>{
     const total=group.rows.reduce((sum,t)=>sum+Number(t.amount||0),0);
     const groupCategoryTotals={};
     group.rows.forEach(t=>{
@@ -265,7 +264,6 @@ function renderPurchaseMap(){
     });
     const dominantCategory=Object.entries(groupCategoryTotals).sort((a,b)=>b[1]-a[1])[0]?.[0]||"ללא קטגוריה";
     const markerColor=categoryColors[dominantCategory]||PIE_COLORS[0];
-
     const lines=group.rows
       .slice()
       .sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at))
@@ -275,22 +273,45 @@ function renderPurchaseMap(){
         return `<div class="map-popup-row"><span class="map-popup-name"><i class="map-popup-color" style="background:${color}"></i><strong>${escapeHtml(t.merchant||"עסקה")}</strong></span><span>${money(t.amount)}</span></div>`;
       })
       .join("");
-
     const popupHtml=`<div class="map-popup"><div class="map-popup-title">${group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור"}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
-
-    const dot=document.createElement("button");
-    dot.type="button";
-    dot.className="purchase-map-dot";
-    dot.style.background=markerColor;
-    dot.setAttribute("aria-label","הצג רכישות בנקודה");
-
-    new maplibregl.Marker({element:dot,anchor:"center"})
-      .setLngLat([group.lng,group.lat])
-      .setPopup(new maplibregl.Popup({offset:14,maxWidth:"280px"}).setHTML(popupHtml))
-      .addTo(purchaseMap);
+    return {
+      type:"Feature",
+      id:index,
+      properties:{color:markerColor,popupHtml},
+      geometry:{type:"Point",coordinates:[group.lng,group.lat]}
+    };
   });
 
   purchaseMap.once("load",()=>{
+    purchaseMap.addSource("purchases",{
+      type:"geojson",
+      data:{type:"FeatureCollection",features}
+    });
+    purchaseMap.addLayer({
+      id:"purchase-points",
+      type:"circle",
+      source:"purchases",
+      paint:{
+        "circle-radius":9,
+        "circle-color":["get","color"],
+        "circle-stroke-color":"#FFFFFF",
+        "circle-stroke-width":3,
+        "circle-opacity":0.96
+      }
+    });
+
+    purchaseMap.on("mouseenter","purchase-points",()=>{purchaseMap.getCanvas().style.cursor="pointer";});
+    purchaseMap.on("mouseleave","purchase-points",()=>{purchaseMap.getCanvas().style.cursor="";});
+    purchaseMap.on("click","purchase-points",(e)=>{
+      const feature=e.features?.[0];
+      if(!feature)return;
+      const coordinates=feature.geometry.coordinates.slice();
+      new maplibregl.Popup({offset:14,maxWidth:"280px"})
+        .setLngLat(coordinates)
+        .setHTML(feature.properties.popupHtml)
+        .addTo(purchaseMap);
+    });
+
     if(points.length===1){
       purchaseMap.jumpTo({center:[points[0].lng,points[0].lat],zoom:16});
     }else{
