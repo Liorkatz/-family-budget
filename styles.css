@@ -1755,3 +1755,66 @@ dialog::backdrop{
     padding:9px 8px;
   }
 }
+
+
+/* v1.0.49 - filtered totals + private income reveal */
+.filter-total{
+  margin:10px 0 2px;
+  padding:15px 17px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  background:
+    radial-gradient(180px 90px at 100% 0%,rgba(111,130,245,.18),transparent 72%),
+    linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028)),
+    rgba(14,22,35,.92);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 24px rgba(0,0,0,.18);
+}
+.filter-total span{
+  color:#AAB7C9;
+  font-size:14px;
+  font-weight:700;
+}
+.filter-total strong{
+  color:#FFFFFF;
+  font-size:22px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.income-private{
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
+}
+.income-private .income-lock-hint{
+  display:inline-block;
+  margin-inline-start:4px;
+  font-size:12px;
+  line-height:1;
+  opacity:.78;
+  vertical-align:1px;
+}
+.income-private #incomeAmount{
+  transition:filter .2s ease,opacity .2s ease,transform .2s ease;
+}
+.income-private #incomeAmount.income-blurred{
+  filter:blur(9px);
+  opacity:.62;
+  transform:scale(.97);
+}
+.income-private.income-revealed #incomeAmount{
+  filter:none;
+  opacity:1;
+  transform:none;
+}
+.income-private.income-unlocking{
+  opacity:.72;
+  pointer-events:none;
+}
+.income-private:active{
+  transform:translateY(1px);
+}

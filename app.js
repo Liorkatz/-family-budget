@@ -42,6 +42,117 @@ let categoryPieChart = null;
 let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
+let incomeRevealed=false;
+let incomeUnlockBusy=false;
+
+const incomeCredentialStorageKey=()=>`familyBudgetIncomeCredential:${state.me?.id||"default"}`;
+const randomBytes=(length=32)=>crypto.getRandomValues(new Uint8Array(length));
+const arrayBufferToBase64Url=(buffer)=>{
+  let binary="";
+  new Uint8Array(buffer).forEach(byte=>binary+=String.fromCharCode(byte));
+  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+};
+const base64UrlToArrayBuffer=(value)=>{
+  const base64=String(value||"").replace(/-/g,"+").replace(/_/g,"/");
+  const padded=base64+"=".repeat((4-base64.length%4)%4);
+  const binary=atob(padded);
+  return Uint8Array.from(binary,ch=>ch.charCodeAt(0)).buffer;
+};
+
+function syncIncomePrivacy(){
+  const amount=$("incomeAmount"), card=$("incomeStatCard"), hint=$("incomeLockHint");
+  if(!amount||!card)return;
+  amount.classList.toggle("income-blurred",!incomeRevealed);
+  card.classList.toggle("income-revealed",incomeRevealed);
+  card.setAttribute("aria-label",incomeRevealed?"הכנסות מוצגות. לחץ להסתרה":"הכנסות מוסתרות. לחץ להצגה");
+  if(hint)hint.textContent=incomeRevealed?"👁":"🔒";
+}
+
+async function verifyDeviceForIncome(){
+  if(!window.isSecureContext || !window.PublicKeyCredential || !navigator.credentials){
+    return {supported:false,ok:true};
+  }
+
+  let platformAvailable=false;
+  try{
+    platformAvailable=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  }catch(_){}
+  if(!platformAvailable)return {supported:false,ok:true};
+
+  const storageKey=incomeCredentialStorageKey();
+  const savedCredential=localStorage.getItem(storageKey);
+  const challenge=randomBytes();
+
+  try{
+    if(savedCredential){
+      const assertion=await navigator.credentials.get({
+        publicKey:{
+          challenge,
+          allowCredentials:[{type:"public-key",id:base64UrlToArrayBuffer(savedCredential),transports:["internal"]}],
+          userVerification:"required",
+          timeout:60000
+        }
+      });
+      return {supported:true,ok:Boolean(assertion)};
+    }
+
+    const userId=randomBytes(24);
+    const credential=await navigator.credentials.create({
+      publicKey:{
+        challenge,
+        rp:{name:"Family Budget"},
+        user:{id:userId,name:"family-budget-income",displayName:"הצגת הכנסות"},
+        pubKeyCredParams:[
+          {type:"public-key",alg:-7},
+          {type:"public-key",alg:-257}
+        ],
+        authenticatorSelection:{
+          authenticatorAttachment:"platform",
+          userVerification:"required",
+          residentKey:"discouraged",
+          requireResidentKey:false
+        },
+        timeout:60000,
+        attestation:"none"
+      }
+    });
+    if(!credential)return {supported:true,ok:false};
+    localStorage.setItem(storageKey,arrayBufferToBase64Url(credential.rawId));
+    return {supported:true,ok:true};
+  }catch(err){
+    if(err?.name==="NotFoundError" && savedCredential){
+      localStorage.removeItem(storageKey);
+    }
+    return {supported:true,ok:false,cancelled:err?.name==="NotAllowedError"};
+  }
+}
+
+async function toggleIncomeVisibility(){
+  if(incomeUnlockBusy)return;
+  if(incomeRevealed){
+    incomeRevealed=false;
+    syncIncomePrivacy();
+    return;
+  }
+
+  incomeUnlockBusy=true;
+  const card=$("incomeStatCard");
+  card?.classList.add("income-unlocking");
+  try{
+    const result=await verifyDeviceForIncome();
+    if(!result.ok){
+      if(!result.cancelled)toast("לא ניתן לאמת את המכשיר");
+      return;
+    }
+    incomeRevealed=true;
+    syncIncomePrivacy();
+    if(!result.supported)toast("אימות ביומטרי לא זמין בדפדפן הזה");
+  }finally{
+    incomeUnlockBusy=false;
+    card?.classList.remove("income-unlocking");
+  }
+}
+
 
 function show(id){
   ["authView","bootstrapView","appView"].forEach(x=>$(x).classList.add("hidden"));
@@ -126,7 +237,7 @@ $("joinFamilyForm").onsubmit=async(e)=>{
   await init();
 };
 
-async function logout(){ await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[],adminInfo:null}; show("authView"); }
+async function logout(){ incomeRevealed=false; await sb.auth.signOut(); state={family:null,me:null,members:[],categories:[],transactions:[],incomes:[],fixed:[],budgets:[],adminInfo:null}; show("authView"); }
 $("logoutBtn").onclick=logout; $("bootstrapLogout").onclick=logout;
 $("appVersion").onclick=()=>{
   sessionStorage.setItem("showRefreshToast","1");
@@ -356,6 +467,7 @@ function render(){
   const forecast=isCurrentMonth?Math.round((spent/elapsed)*daysInMonth):Math.round(spent);
   const available=income-spent-fixed;
   $("incomeAmount").textContent=money(income); $("spentAmount").textContent=money(spent); $("fixedAmount").textContent=money(fixed); $("forecastAmount").textContent=money(forecast); $("availableAmount").textContent=money(available);
+  syncIncomePrivacy();
 
   renderCategoryPie();
 
@@ -704,6 +816,12 @@ function renderTransactionSearch(){
   bindTransactionLongPress($("allTransactions"));
 
   const active=Boolean(q||categoryFilter);
+  const filteredTotal=rows.reduce((sum,t)=>sum+Number(t.amount||0),0);
+  if($("transactionFilterTotal")){
+    const totalEl=$("transactionFilterTotal");
+    totalEl.classList.toggle("hidden",!active);
+    totalEl.innerHTML=active?`<span>סה״כ בסינון · ${escapeHtml(monthName())}</span><strong>${money(filteredTotal)}</strong>`:"";
+  }
   if($("transactionSearchMeta")){
     $("transactionSearchMeta").classList.toggle("hidden",!active);
     const catName=categoryFilter==="__none__"?"ללא קטגוריה":state.categories.find(c=>c.id===categoryFilter)?.name;
@@ -714,6 +832,13 @@ function renderTransactionSearch(){
 $("transactionSearch").oninput=renderTransactionSearch;
 $("transactionCategoryFilter").onchange=renderTransactionSearch;
 $("clearTransactionSearch").onclick=()=>{$("transactionSearch").value="";renderTransactionSearch();$("transactionSearch").focus();};
+$("incomeStatCard").onclick=toggleIncomeVisibility;
+$("incomeStatCard").onkeydown=(e)=>{
+  if(e.key==="Enter"||e.key===" "){
+    e.preventDefault();
+    toggleIncomeVisibility();
+  }
+};
 
 $("openAddTransaction").onclick=()=>$("transactionDialog").showModal();
 $("closeTransactionDialog").onclick=()=>$("transactionDialog").close();

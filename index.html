@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260925-2125" />
+  <link rel="stylesheet" href="./styles.css?v=49" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -74,7 +74,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.48</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.49</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -87,7 +87,7 @@
         </article>
 
         <section class="stats-grid">
-          <article class="stat-card"><span>הכנסות</span><strong id="incomeAmount">₪0</strong></article>
+          <article id="incomeStatCard" class="stat-card income-private" role="button" tabindex="0" aria-label="הכנסות מוסתרות. לחץ להצגה"><span>הכנסות <small class="income-lock-hint" id="incomeLockHint">🔒</small></span><strong id="incomeAmount" class="income-blurred">₪0</strong></article>
           <article class="stat-card"><span>הוצאות בפועל</span><strong id="spentAmount">₪0</strong></article>
           <article id="fixedStatCard" class="stat-card clickable-card" role="button" tabindex="0"><span>קבועות החודש</span><strong id="fixedAmount">₪0</strong></article>
           <article class="stat-card"><span>תחזית סוף חודש</span><strong id="forecastAmount">₪0</strong></article>
@@ -118,6 +118,7 @@
         </div>
         <div id="transactionSearchMeta" class="search-meta hidden"></div>
         <div id="allTransactions" class="transaction-list panel"></div>
+        <div id="transactionFilterTotal" class="filter-total hidden" aria-live="polite"></div>
       </section>
 
       <section id="analysisPage" class="page">
@@ -229,6 +230,6 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
-  <script src="./app.js?v=20260925-2134"></script>
+  <script src="./app.js?v=49"></script>
 </body>
 </html>
