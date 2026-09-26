@@ -775,9 +775,9 @@ window.makeToken=async(memberId,name)=>{const {data,error}=await sb.functions.in
 $("rotateFamilyCode").onclick=async()=>{
   const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"rotate"}});
   if(error||data?.error)return toast(data?.error||error.message);
-  sessionStorage.setItem("familyCode", data.familyCode);
-  $("familyCodeHint").textContent=data.familyCode;
-  if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה נוכחי";
+  sessionStorage.removeItem("familyCode");
+  if(data.maskedCode) $("familyCodeHint").textContent=data.maskedCode;
+  if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה";
   toast("קוד המשפחה עודכן");
   await loadAll();
 };
@@ -790,9 +790,9 @@ $("saveFamilyCode").onclick=async()=>{
     const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"set_code",code}});
     if(error||data?.error){toast(data?.error||error.message);return;}
     $("customFamilyCode").value="";
-    sessionStorage.setItem("familyCode", data.familyCode);
-    $("familyCodeHint").textContent=data.familyCode;
-    if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה נוכחי";
+    sessionStorage.removeItem("familyCode");
+    if(data.maskedCode) $("familyCodeHint").textContent=data.maskedCode;
+    if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה";
     toast("קוד המשפחה עודכן");
   }finally{
     $("saveFamilyCode").disabled=false;
