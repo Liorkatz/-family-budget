@@ -159,7 +159,6 @@ async function toggleIncomeVisibility(){
   }
 }
 
-let analysisMode="summary";
 let purchaseMap=null;
 let purchaseMapLayer=null;
 let manualTransactionLocation=null;
@@ -208,18 +207,10 @@ function captureCurrentPhoneLocation(){
   );
 }
 
-function setAnalysisMode(mode){
-  analysisMode=mode==="map"?"map":"summary";
-  $("analysisSummaryView")?.classList.toggle("hidden",analysisMode!=="summary");
-  $("analysisMapView")?.classList.toggle("hidden",analysisMode!=="map");
-  $("analysisSummaryTab")?.classList.toggle("active",analysisMode==="summary");
-  $("analysisMapTab")?.classList.toggle("active",analysisMode==="map");
-  if(analysisMode==="map") setTimeout(renderPurchaseMap,80);
-}
-
 function renderPurchaseMap(){
   const mapEl=$("purchaseMap");
-  if(!mapEl || !window.maplibregl || analysisMode!=="map")return;
+  const analysisPage=$("analysisPage");
+  if(!mapEl || !window.maplibregl || !analysisPage?.classList.contains("active"))return;
 
   const located=state.transactions.filter(t=>Number.isFinite(Number(t.latitude))&&Number.isFinite(Number(t.longitude)));
   const missing=Math.max(0,state.transactions.length-located.length);
@@ -244,6 +235,17 @@ function renderPurchaseMap(){
 
   if(!located.length)return;
 
+  const categoryTotals={};
+  state.transactions.forEach(t=>{
+    const name=t.categories?.name||"ללא קטגוריה";
+    categoryTotals[name]=(categoryTotals[name]||0)+Number(t.amount||0);
+  });
+  const categoryColors=Object.fromEntries(
+    Object.entries(categoryTotals)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([name],index)=>[name,PIE_COLORS[index%PIE_COLORS.length]])
+  );
+
   const groups=new Map();
   located.forEach(t=>{
     const lat=Number(t.latitude), lng=Number(t.longitude);
@@ -252,20 +254,36 @@ function renderPurchaseMap(){
     groups.get(key).rows.push(t);
   });
 
-  const bounds=new maplibregl.LngLatBounds();
+  const points=[...groups.values()];
+
   groups.forEach(group=>{
-    bounds.extend([group.lng,group.lat]);
     const total=group.rows.reduce((sum,t)=>sum+Number(t.amount||0),0);
+    const groupCategoryTotals={};
+    group.rows.forEach(t=>{
+      const name=t.categories?.name||"ללא קטגוריה";
+      groupCategoryTotals[name]=(groupCategoryTotals[name]||0)+Number(t.amount||0);
+    });
+    const dominantCategory=Object.entries(groupCategoryTotals).sort((a,b)=>b[1]-a[1])[0]?.[0]||"ללא קטגוריה";
+    const markerColor=categoryColors[dominantCategory]||PIE_COLORS[0];
+
     const lines=group.rows
       .slice()
       .sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at))
-      .map(t=>`<div class="map-popup-row"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><span>${money(t.amount)}</span></div>`)
+      .map(t=>{
+        const category=t.categories?.name||"ללא קטגוריה";
+        const color=categoryColors[category]||PIE_COLORS[0];
+        return `<div class="map-popup-row"><span class="map-popup-name"><i class="map-popup-color" style="background:${color}"></i><strong>${escapeHtml(t.merchant||"עסקה")}</strong></span><span>${money(t.amount)}</span></div>`;
+      })
       .join("");
+
     const popupHtml=`<div class="map-popup"><div class="map-popup-title">${group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור"}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
+
     const dot=document.createElement("button");
     dot.type="button";
     dot.className="purchase-map-dot";
+    dot.style.background=markerColor;
     dot.setAttribute("aria-label","הצג רכישות בנקודה");
+
     new maplibregl.Marker({element:dot,anchor:"center"})
       .setLngLat([group.lng,group.lat])
       .setPopup(new maplibregl.Popup({offset:14,maxWidth:"280px"}).setHTML(popupHtml))
@@ -273,11 +291,28 @@ function renderPurchaseMap(){
   });
 
   purchaseMap.once("load",()=>{
-    if(groups.size===1){
-      const only=[...groups.values()][0];
-      purchaseMap.jumpTo({center:[only.lng,only.lat],zoom:16});
+    if(points.length===1){
+      purchaseMap.jumpTo({center:[points[0].lng,points[0].lat],zoom:16});
     }else{
-      purchaseMap.fitBounds(bounds,{padding:42,maxZoom:16,duration:0});
+      let farthestA=points[0], farthestB=points[1], maxDistance=-1;
+      for(let i=0;i<points.length;i++){
+        for(let j=i+1;j<points.length;j++){
+          const meanLat=((points[i].lat+points[j].lat)/2)*Math.PI/180;
+          const dx=(points[i].lng-points[j].lng)*Math.cos(meanLat);
+          const dy=points[i].lat-points[j].lat;
+          const distance=(dx*dx)+(dy*dy);
+          if(distance>maxDistance){
+            maxDistance=distance;
+            farthestA=points[i];
+            farthestB=points[j];
+          }
+        }
+      }
+      const farthestBounds=new maplibregl.LngLatBounds(
+        [farthestA.lng,farthestA.lat],
+        [farthestB.lng,farthestB.lat]
+      );
+      purchaseMap.fitBounds(farthestBounds,{padding:18,maxZoom:16,duration:0});
     }
     purchaseMap.resize();
   });
@@ -390,7 +425,7 @@ $("nextMonth").onclick=()=>moveMonth(1);
 function openPage(pageId){
   document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
   document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===pageId));
-  if(pageId==="analysisPage"&&analysisMode==="map")setTimeout(renderPurchaseMap,80);
+  if(pageId==="analysisPage")setTimeout(renderPurchaseMap,80);
 }
 document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.onclick=()=>{
   openPage(btn.dataset.page);
@@ -632,7 +667,7 @@ function render(){
   const byMember={};state.transactions.forEach(t=>{const k=t.members?.name||"לא ידוע";byMember[k]=(byMember[k]||0)+Number(t.amount)});
   $("memberBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>הוצאות לפי בן משפחה</strong></div>'+Object.entries(byMember).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`<div class="settings-row"><span>${escapeHtml(n)}</span><strong>${money(v)}</strong></div>`).join("")+'</div>';
   $("budgetBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>ניצול תקציבים</strong></div>'+state.budgets.map(b=>{const used=state.transactions.filter(t=>t.category_id===b.category_id).reduce((s,t)=>s+Number(t.amount),0);const pct=Math.min(100,Math.round(used/Number(b.monthly_limit)*100)||0);return `<div style="margin:14px 0"><div class="bar-label"><span>${escapeHtml(b.categories?.name||"קטגוריה")}</span><strong>${money(used)} / ${money(b.monthly_limit)}</strong></div><div class="progress"><i style="width:${pct}%"></i></div></div>`}).join("")+'</div>';
-  if(analysisMode==="map")setTimeout(renderPurchaseMap,80);
+  if($("analysisPage")?.classList.contains("active"))setTimeout(renderPurchaseMap,80);
 }
 
 $("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
@@ -982,8 +1017,6 @@ $("clearTxLocation").onclick=()=>{
   setManualLocationStatus();
   $("captureTxLocation").textContent="📍 צרף את מיקום הטלפון";
 };
-$("analysisSummaryTab").onclick=()=>setAnalysisMode("summary");
-$("analysisMapTab").onclick=()=>setAnalysisMode("map");
 $("transactionForm").onsubmit=async(e)=>{
   e.preventDefault();
   const payload={
