@@ -1902,3 +1902,52 @@ dialog::backdrop{
 #analysisPage .map-panel{
   margin-bottom:14px;
 }
+
+
+/* v1.0.59 - compact family admin code card */
+#familyAdminCard{
+  padding:0 14px;
+}
+#familyAdminCard summary{
+  padding:13px 0 11px;
+}
+.compact-family-code{
+  padding:0 0 8px;
+  gap:10px;
+}
+.family-code-current{
+  min-width:0;
+}
+.family-code-current small{
+  margin-bottom:2px;
+  font-size:11px;
+}
+#familyCodeHint{
+  direction:ltr;
+  unicode-bidi:isolate;
+  text-align:left;
+  display:inline-block;
+  font-size:18px;
+  line-height:1.15;
+}
+.compact-family-code .small-btn{
+  padding:8px 11px;
+  min-height:38px;
+}
+.compact-family-form{
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  padding-bottom:10px;
+}
+.compact-family-form input{
+  min-height:40px;
+  padding:8px 11px;
+}
+.compact-family-form .small-btn{
+  min-height:40px;
+  padding:8px 12px;
+}
+.compact-pending{
+  margin-top:4px;
+  padding-bottom:8px;
+}

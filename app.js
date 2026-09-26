@@ -650,11 +650,14 @@ function render(){
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
     const visibleCode=sessionStorage.getItem("familyCode");
-    $("familyCodeHint").textContent=visibleCode || (state.adminInfo?.codeHint ? `•••${state.adminInfo.codeHint}` : "לא הוגדר");
+    const codeHint=state.adminInfo?.codeHint||null;
+    $("familyCodeHint").textContent=visibleCode || (codeHint ? `•••${codeHint}` : "לא הוגדר");
+    if($("familyCodeLabel")) $("familyCodeLabel").textContent=visibleCode?"קוד משפחה נוכחי":"סיומת הקוד השמור";
     const pending=state.adminInfo?.pending||[];
+    $("pendingRequests").classList.toggle("hidden",!pending.length);
     $("pendingRequests").innerHTML=pending.length
       ? pending.map(r=>`<div class="settings-row"><div><strong>${escapeHtml(r.display_name)}</strong><small>בקשת הצטרפות</small></div><div class="mini-actions"><button class="mini-btn approve" onclick="decideJoin('${r.id}','approve')">אשר</button><button class="mini-btn" onclick="decideJoin('${r.id}','reject')">דחה</button></div></div>`).join("")
-      : '<div class="empty-state">אין בקשות הצטרפות ממתינות</div>';
+      : "";
   }
   $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי · ${money(x.amount)}</small></div><div class="mini-actions"><button class="mini-btn" onclick="editIncome('${x.id}')">ערוך</button><button class="mini-btn danger-btn" onclick="deleteIncome('${x.id}','${escapeHtml(x.description)}')">מחק</button></div></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
   renderFixedList();
@@ -772,6 +775,7 @@ $("rotateFamilyCode").onclick=async()=>{
   if(error||data?.error)return toast(data?.error||error.message);
   sessionStorage.setItem("familyCode", data.familyCode);
   $("familyCodeHint").textContent=data.familyCode;
+  if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה נוכחי";
   toast("קוד המשפחה עודכן");
   await loadAll();
 };
@@ -786,6 +790,7 @@ $("saveFamilyCode").onclick=async()=>{
     $("customFamilyCode").value="";
     sessionStorage.setItem("familyCode", data.familyCode);
     $("familyCodeHint").textContent=data.familyCode;
+    if($("familyCodeLabel")) $("familyCodeLabel").textContent="קוד משפחה נוכחי";
     toast("קוד המשפחה עודכן");
   }finally{
     $("saveFamilyCode").disabled=false;

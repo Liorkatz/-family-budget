@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=58" />
+  <link rel="stylesheet" href="./styles.css?v=59" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.58</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.59</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -146,18 +146,18 @@
 
         <details id="familyAdminCard" class="settings-card" open>
           <summary>ניהול המשפחה</summary>
-          <div class="family-code-box">
-            <div>
-              <small>קוד משפחה נוכחי</small>
-              <strong id="familyCodeHint">לא הוגדר</strong>
+          <div class="family-code-box compact-family-code">
+            <div class="family-code-current">
+              <small id="familyCodeLabel">סיומת הקוד השמור</small>
+              <strong id="familyCodeHint" dir="ltr">לא הוגדר</strong>
             </div>
             <button id="rotateFamilyCode" class="small-btn" type="button">קוד אקראי</button>
           </div>
-          <div id="customFamilyCodeForm" class="inline-form family-code-form">
-            <input id="customFamilyCode" minlength="6" maxlength="24" placeholder="קוד חדש, למשל KATZ2026" autocapitalize="characters" />
-            <button id="saveFamilyCode" class="small-btn" type="button">שמור קוד</button>
+          <div id="customFamilyCodeForm" class="inline-form family-code-form compact-family-form">
+            <input id="customFamilyCode" minlength="6" maxlength="24" placeholder="קוד חדש" autocapitalize="characters" />
+            <button id="saveFamilyCode" class="small-btn" type="button">שמור</button>
           </div>
-          <div id="pendingRequests" class="settings-list"></div>
+          <div id="pendingRequests" class="settings-list compact-pending hidden"></div>
         </details>
 
         <details class="settings-card" open>
@@ -252,6 +252,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=58"></script>
+  <script src="./app.js?v=59"></script>
 </body>
 </html>
