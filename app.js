@@ -102,7 +102,7 @@ function setAnalysisMode(mode){
 
 function renderPurchaseMap(){
   const mapEl=$("purchaseMap");
-  if(!mapEl || !window.L || analysisMode!=="map")return;
+  if(!mapEl || !window.maplibregl || analysisMode!=="map")return;
 
   const located=state.transactions.filter(t=>Number.isFinite(Number(t.latitude))&&Number.isFinite(Number(t.longitude)));
   const missing=Math.max(0,state.transactions.length-located.length);
@@ -116,16 +116,16 @@ function renderPurchaseMap(){
     purchaseMap=null;
   }
 
-  purchaseMap=L.map(mapEl,{zoomControl:true,attributionControl:true});
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    maxZoom:19,
-    attribution:'&copy; OpenStreetMap contributors'
-  }).addTo(purchaseMap);
+  purchaseMap=new maplibregl.Map({
+    container:mapEl,
+    style:"https://tiles.openfreemap.org/styles/liberty",
+    center:[34.800,31.929],
+    zoom:13,
+    attributionControl:true
+  });
+  purchaseMap.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-left");
 
-  if(!located.length){
-    purchaseMap.setView([31.929,34.800],13);
-    return;
-  }
+  if(!located.length)return;
 
   const groups=new Map();
   located.forEach(t=>{
@@ -135,142 +135,36 @@ function renderPurchaseMap(){
     groups.get(key).rows.push(t);
   });
 
-  const bounds=[];
+  const bounds=new maplibregl.LngLatBounds();
   groups.forEach(group=>{
-    bounds.push([group.lat,group.lng]);
+    bounds.extend([group.lng,group.lat]);
     const total=group.rows.reduce((sum,t)=>sum+Number(t.amount||0),0);
     const lines=group.rows
       .slice()
       .sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at))
       .map(t=>`<div class="map-popup-row"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><span>${money(t.amount)}</span></div>`)
       .join("");
-    const popup=`<div class="map-popup"><div class="map-popup-title">${group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור"}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
-    L.circleMarker([group.lat,group.lng],{
-      radius:9,
-      weight:3,
-      color:"#ffffff",
-      fillColor:"#6F82F5",
-      fillOpacity:.92
-    }).addTo(purchaseMap).bindPopup(popup,{maxWidth:280});
+    const popupHtml=`<div class="map-popup"><div class="map-popup-title">${group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור"}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
+    const dot=document.createElement("button");
+    dot.type="button";
+    dot.className="purchase-map-dot";
+    dot.setAttribute("aria-label","הצג רכישות בנקודה");
+    new maplibregl.Marker({element:dot,anchor:"center"})
+      .setLngLat([group.lng,group.lat])
+      .setPopup(new maplibregl.Popup({offset:14,maxWidth:"280px"}).setHTML(popupHtml))
+      .addTo(purchaseMap);
   });
 
-  if(bounds.length===1)purchaseMap.setView(bounds[0],16);
-  else purchaseMap.fitBounds(bounds,{padding:[28,28],maxZoom:16});
-  setTimeout(()=>purchaseMap?.invalidateSize(),80);
-}
-
-let incomeRevealed=false;
-let incomeUnlockBusy=false;
-
-const incomeCredentialStorageKey=()=>`familyBudgetIncomeCredential:${state.me?.id||"default"}`;
-const randomBytes=(length=32)=>crypto.getRandomValues(new Uint8Array(length));
-const arrayBufferToBase64Url=(buffer)=>{
-  let binary="";
-  new Uint8Array(buffer).forEach(byte=>binary+=String.fromCharCode(byte));
-  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-};
-const base64UrlToArrayBuffer=(value)=>{
-  const base64=String(value||"").replace(/-/g,"+").replace(/_/g,"/");
-  const padded=base64+"=".repeat((4-base64.length%4)%4);
-  const binary=atob(padded);
-  return Uint8Array.from(binary,ch=>ch.charCodeAt(0)).buffer;
-};
-
-function syncIncomePrivacy(){
-  const amount=$("incomeAmount"), card=$("incomeStatCard"), hint=$("incomeLockHint");
-  if(!amount||!card)return;
-  amount.classList.toggle("income-blurred",!incomeRevealed);
-  card.classList.toggle("income-revealed",incomeRevealed);
-  card.setAttribute("aria-label",incomeRevealed?"הכנסות מוצגות. לחץ להסתרה":"הכנסות מוסתרות. לחץ להצגה");
-  if(hint)hint.textContent=incomeRevealed?"👁":"🔒";
-}
-
-async function verifyDeviceForIncome(){
-  if(!window.isSecureContext || !window.PublicKeyCredential || !navigator.credentials){
-    return {supported:false,ok:true};
-  }
-
-  let platformAvailable=false;
-  try{
-    platformAvailable=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  }catch(_){}
-  if(!platformAvailable)return {supported:false,ok:true};
-
-  const storageKey=incomeCredentialStorageKey();
-  const savedCredential=localStorage.getItem(storageKey);
-  const challenge=randomBytes();
-
-  try{
-    if(savedCredential){
-      const assertion=await navigator.credentials.get({
-        publicKey:{
-          challenge,
-          allowCredentials:[{type:"public-key",id:base64UrlToArrayBuffer(savedCredential),transports:["internal"]}],
-          userVerification:"required",
-          timeout:60000
-        }
-      });
-      return {supported:true,ok:Boolean(assertion)};
+  purchaseMap.once("load",()=>{
+    if(groups.size===1){
+      const only=[...groups.values()][0];
+      purchaseMap.jumpTo({center:[only.lng,only.lat],zoom:16});
+    }else{
+      purchaseMap.fitBounds(bounds,{padding:42,maxZoom:16,duration:0});
     }
-
-    const userId=randomBytes(24);
-    const credential=await navigator.credentials.create({
-      publicKey:{
-        challenge,
-        rp:{name:"Family Budget"},
-        user:{id:userId,name:"family-budget-income",displayName:"הצגת הכנסות"},
-        pubKeyCredParams:[
-          {type:"public-key",alg:-7},
-          {type:"public-key",alg:-257}
-        ],
-        authenticatorSelection:{
-          authenticatorAttachment:"platform",
-          userVerification:"required",
-          residentKey:"discouraged",
-          requireResidentKey:false
-        },
-        timeout:60000,
-        attestation:"none"
-      }
-    });
-    if(!credential)return {supported:true,ok:false};
-    localStorage.setItem(storageKey,arrayBufferToBase64Url(credential.rawId));
-    return {supported:true,ok:true};
-  }catch(err){
-    if(err?.name==="NotFoundError" && savedCredential){
-      localStorage.removeItem(storageKey);
-    }
-    return {supported:true,ok:false,cancelled:err?.name==="NotAllowedError"};
-  }
+    purchaseMap.resize();
+  });
 }
-
-async function toggleIncomeVisibility(){
-  if(incomeUnlockBusy)return;
-  if(incomeRevealed){
-    incomeRevealed=false;
-    syncIncomePrivacy();
-    return;
-  }
-
-  incomeUnlockBusy=true;
-  const card=$("incomeStatCard");
-  card?.classList.add("income-unlocking");
-  try{
-    const result=await verifyDeviceForIncome();
-    if(!result.ok){
-      if(!result.cancelled)toast("לא ניתן לאמת את המכשיר");
-      return;
-    }
-    incomeRevealed=true;
-    syncIncomePrivacy();
-    if(!result.supported)toast("אימות ביומטרי לא זמין בדפדפן הזה");
-  }finally{
-    incomeUnlockBusy=false;
-    card?.classList.remove("income-unlocking");
-  }
-}
-
-
 function show(id){
   ["authView","bootstrapView","appView"].forEach(x=>$(x).classList.add("hidden"));
   $(id).classList.remove("hidden");
