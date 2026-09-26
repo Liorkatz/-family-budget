@@ -294,25 +294,9 @@ function renderPurchaseMap(){
     if(points.length===1){
       purchaseMap.jumpTo({center:[points[0].lng,points[0].lat],zoom:16});
     }else{
-      let farthestA=points[0], farthestB=points[1], maxDistance=-1;
-      for(let i=0;i<points.length;i++){
-        for(let j=i+1;j<points.length;j++){
-          const meanLat=((points[i].lat+points[j].lat)/2)*Math.PI/180;
-          const dx=(points[i].lng-points[j].lng)*Math.cos(meanLat);
-          const dy=points[i].lat-points[j].lat;
-          const distance=(dx*dx)+(dy*dy);
-          if(distance>maxDistance){
-            maxDistance=distance;
-            farthestA=points[i];
-            farthestB=points[j];
-          }
-        }
-      }
-      const farthestBounds=new maplibregl.LngLatBounds(
-        [farthestA.lng,farthestA.lat],
-        [farthestB.lng,farthestB.lat]
-      );
-      purchaseMap.fitBounds(farthestBounds,{padding:18,maxZoom:16,duration:0});
+      const visibleBounds=new maplibregl.LngLatBounds();
+      points.forEach(point=>visibleBounds.extend([point.lng,point.lat]));
+      purchaseMap.fitBounds(visibleBounds,{padding:12,maxZoom:17,duration:0});
     }
     purchaseMap.resize();
   });
