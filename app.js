@@ -373,13 +373,33 @@ $("toggleAuthMode").onclick=()=>{
 
 $("authForm").onsubmit=async(e)=>{
   e.preventDefault();
-  const email=$("authEmail").value.trim(), password=$("authPassword").value;
-  const result=authMode==="login"
-    ? await sb.auth.signInWithPassword({email,password})
-    : await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href}});
-  if(result.error){ toast(result.error.message); return; }
-  if(authMode==="signup" && !result.data.session){ toast("נשלח אימייל אימות. פתח אותו ואז חזור לאתר."); return; }
-  await init();
+  const email=$("authEmail").value.trim().toLowerCase(), password=$("authPassword").value;
+  const submitBtn=$("authForm").querySelector("button");
+  submitBtn.disabled=true;
+  try{
+    if(authMode==="signup"){
+      const {data:check,error:checkError}=await sb.functions.invoke("check-email",{body:{email}});
+      if(checkError||check?.error){
+        toast(check?.error==="Too many attempts"?"בוצעו יותר מדי בדיקות. נסה שוב בעוד כמה דקות.":"לא ניתן לבדוק כרגע אם האימייל קיים. נסה שוב.");
+        return;
+      }
+      if(check?.exists){
+        authMode="login";
+        submitBtn.textContent="כניסה";
+        $("toggleAuthMode").textContent="אין חשבון? צור חשבון";
+        toast("האימייל כבר רשום במערכת. אפשר להיכנס עם החשבון הקיים.");
+        return;
+      }
+    }
+    const result=authMode==="login"
+      ? await sb.auth.signInWithPassword({email,password})
+      : await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href}});
+    if(result.error){ toast(result.error.message); return; }
+    if(authMode==="signup" && !result.data.session){ toast("נשלח אימייל אימות. פתח אותו ואז חזור לאתר."); return; }
+    await init();
+  }finally{
+    submitBtn.disabled=false;
+  }
 };
 
 $("bootstrapForm").onsubmit=async(e)=>{
