@@ -292,7 +292,13 @@ async function renderPurchaseMap(){
         return `<div class="map-popup-row"><span class="map-popup-name"><i class="map-popup-color" style="background:${color}"></i><strong>${escapeHtml(t.merchant||"עסקה")}</strong></span><span>${money(t.amount)}</span></div>`;
       })
       .join("");
-    const popupHtml=`<div class="map-popup"><div class="map-popup-title">${group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור"}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
+    const placeNames=[...new Set(group.rows.map(t=>String(t.location_name||"").trim()).filter(Boolean))];
+    const placeTitle=placeNames.length===1
+      ? placeNames[0]
+      : placeNames.length>1
+        ? placeNames.slice(0,2).join(" · ")
+        : (group.rows.length>1?`${group.rows.length} רכישות באזור`:"רכישה באזור");
+    const popupHtml=`<div class="map-popup"><div class="map-popup-title">${escapeHtml(placeTitle)}</div>${lines}<div class="map-popup-total"><span>סה״כ</span><strong>${money(total)}</strong></div></div>`;
     return {
       type:"Feature",
       id:index,
@@ -882,6 +888,7 @@ $("testTransaction").onclick=async()=>{
       external_id:`demo-${Date.now()}-${n}`,
       latitude:loc?.[0]??null,
       longitude:loc?.[1]??null,
+      location_name:loc?"מיקום בדיקה":null,
       location_source:loc?"test":null
     });
   }
@@ -967,6 +974,7 @@ $("deleteTransaction").onclick=async()=>{
     external_id:current.external_id||null,
     latitude:current.latitude??null,
     longitude:current.longitude??null,
+    location_name:current.location_name??null,
     location_source:current.location_source??null
   };
   const {error}=await sb.from("transactions").delete().eq("id",id);
