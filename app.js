@@ -690,7 +690,7 @@ function render(){
   bindTransactionLongPress($("recentTransactions"));
   renderTransactionSearch();
 
-  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="editMember('${m.id}')">ערוך</button>${m.id!==state.me.id?`<button class="mini-btn danger-btn" onclick="deleteMember('${m.id}')">מחק</button>`:""}<button class="mini-btn" onclick="makeToken('${m.id}')">צור טוקן</button>`:""}</div></div>`).join("");
+  $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="editMember('${m.id}')">ערוך</button>${m.id!==state.me.id?`<button class="mini-btn danger-btn" onclick="deleteMember('${m.id}')">מחק</button>`:""}<button class="mini-btn" onclick="makeToken('${m.id}')">טוקן לקיצור</button>`:""}</div></div>`).join("");
 
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
@@ -855,7 +855,18 @@ window.decideJoin=async(requestId,action)=>{
 };
 
 $("closeTokenDialog").onclick=()=>$("tokenDialog").close();
-$("copyToken").onclick=async()=>{await navigator.clipboard.writeText($("tokenValue").value);toast("ה־Token הועתק");};
+$("copyToken").onclick=async()=>{
+  const value=$("tokenValue").value;
+  if(!value)return toast("אין Token להעתקה");
+  try{
+    await navigator.clipboard.writeText(value);
+  }catch(_){
+    $("tokenValue").focus();
+    $("tokenValue").select();
+    document.execCommand("copy");
+  }
+  toast("ה־Token הועתק ✓");
+};
 
 $("testTransaction").onclick=async()=>{
   if(!state.members.length)return toast("אין בני משפחה");
