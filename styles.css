@@ -2549,3 +2549,212 @@ dialog{
   #homePage .home-chart-legend{gap:9px}
   #homePage .home-legend-row{font-size:12px;gap:6px}
 }
+
+
+/* v1.0.71 - tighten mobile proportions to match approved mockup */
+@media(max-width:480px){
+  .shell{
+    padding-top:max(6px,env(safe-area-inset-top));
+    padding-inline:12px;
+  }
+
+  .topbar{
+    min-height:78px;
+    margin-bottom:8px;
+    align-items:flex-start;
+  }
+
+  .topbar>div:first-child{
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .topbar .eyebrow{
+    font-size:12px;
+    line-height:1;
+    margin-bottom:6px;
+    text-align:center;
+  }
+
+  .month-switcher{
+    gap:7px;
+    margin-top:0;
+  }
+
+  .month-switcher h1{
+    min-width:166px;
+    font-size:25px!important;
+    line-height:1.05;
+  }
+
+  .month-switcher button{
+    width:34px;
+    height:34px;
+    border-radius:12px;
+    font-size:23px;
+  }
+
+  .topbar-actions{
+    position:absolute;
+    left:0;
+    top:22px;
+    gap:7px;
+  }
+
+  .topbar .version-badge{
+    min-height:32px;
+    padding:5px 8px;
+    font-size:10px;
+  }
+
+  .topbar .icon-btn{
+    width:34px;
+    height:34px;
+    border-radius:11px;
+    font-size:17px;
+  }
+
+  #homePage .home-hero-card{
+    min-height:166px;
+    padding:22px 18px 20px;
+    border-radius:27px;
+  }
+
+  #homePage .hero-wallet-icon{
+    width:39px;
+    height:39px;
+    top:16px;
+    right:16px;
+    border-radius:13px;
+    font-size:20px;
+  }
+
+  #homePage .home-hero-card p{
+    margin-bottom:4px;
+    font-size:16px;
+  }
+
+  #homePage .hero-amount{
+    margin:1px 0 5px;
+    font-size:44px;
+  }
+
+  #homePage .hero-sub{
+    max-width:88%;
+    font-size:12.5px;
+    line-height:1.45;
+  }
+
+  #homePage .home-stats-grid{
+    gap:10px;
+    margin:12px 0;
+  }
+
+  #homePage .home-stats-grid .stat-card{
+    min-height:91px;
+    padding:12px 12px;
+    border-radius:20px;
+    grid-template-columns:1fr 34px;
+  }
+
+  #homePage .home-stats-grid .stat-card span{
+    font-size:12.5px;
+    line-height:1.15;
+  }
+
+  #homePage .home-stats-grid .stat-card strong{
+    margin-top:3px;
+    font-size:20px;
+  }
+
+  #homePage .stat-icon{
+    width:32px;
+    height:32px;
+    border-radius:10px;
+    font-size:17px;
+  }
+
+  #homePage .home-chart-panel{
+    margin-top:12px;
+    padding:14px 13px 12px;
+    border-radius:23px;
+  }
+
+  #homePage .home-panel-title{
+    margin:0 1px 4px;
+    font-size:18px;
+  }
+
+  #homePage .home-chart-layout{
+    grid-template-columns:minmax(0,1.22fr) minmax(102px,.78fr);
+    gap:3px;
+    min-height:230px;
+  }
+
+  #homePage .category-pie{
+    height:225px!important;
+    min-height:225px!important;
+  }
+
+  #homePage .home-chart-legend{
+    gap:8px;
+    padding:0;
+  }
+
+  #homePage .home-legend-row{
+    grid-template-columns:10px minmax(0,1fr) auto;
+    gap:6px;
+    font-size:11.5px;
+    line-height:1.15;
+  }
+
+  #homePage .home-legend-dot{
+    width:9px;
+    height:9px;
+  }
+
+  #homePage .home-transactions-panel{
+    margin-top:12px;
+    padding:14px 15px 7px;
+    border-radius:23px;
+  }
+
+  #homePage .home-transactions-head .eyebrow{
+    font-size:11px;
+  }
+
+  #homePage .home-transactions-head h2{
+    font-size:22px;
+    line-height:1.1;
+  }
+
+  #homePage #recentTransactions{
+    margin-top:7px;
+  }
+
+  #homePage #recentTransactions .transaction-row{
+    min-height:58px;
+    padding:10px 43px 10px 1px;
+  }
+
+  #homePage .tx-category-icon{
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    font-size:16px;
+  }
+
+  #homePage #recentTransactions .transaction-main strong{
+    font-size:15px;
+  }
+
+  #homePage #recentTransactions .amount-under-name{
+    font-size:16px;
+  }
+
+  #homePage #recentTransactions .transaction-main small{
+    font-size:10.5px;
+  }
+}
