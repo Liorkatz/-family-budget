@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=69" />
+  <link rel="stylesheet" href="./styles.css?v=70" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -75,33 +75,52 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.69</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.70</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
 
       <section id="homePage" class="page active">
-        <article class="hero-card">
+        <article class="hero-card home-hero-card">
+          <div class="hero-wallet-icon" aria-hidden="true">▣</div>
           <p>פנוי אמיתי החודש</p>
           <div class="hero-amount" id="availableAmount">₪0</div>
           <div class="hero-sub">הכנסות פחות הוצאות בפועל והוצאות קבועות שטרם שולמו</div>
         </article>
 
-        <section class="stats-grid">
-          <article id="incomeStatCard" class="stat-card income-private" role="button" tabindex="0" aria-label="הכנסות מוסתרות. לחץ להצגה"><span>הכנסות <small class="income-lock-hint" id="incomeLockHint">🔒</small></span><strong id="incomeAmount" class="income-blurred">₪0</strong></article>
-          <article class="stat-card"><span>הוצאות בפועל</span><strong id="spentAmount">₪0</strong></article>
-          <article id="fixedStatCard" class="stat-card clickable-card" role="button" tabindex="0"><span>קבועות החודש</span><strong id="fixedAmount">₪0</strong></article>
-          <article class="stat-card"><span>תחזית סוף חודש</span><strong id="forecastAmount">₪0</strong></article>
+        <section class="stats-grid home-stats-grid">
+          <article id="incomeStatCard" class="stat-card income-private stat-income" role="button" tabindex="0" aria-label="הכנסות מוסתרות. לחץ להצגה">
+            <div class="stat-icon" aria-hidden="true">▥</div>
+            <span>הכנסות <small class="income-lock-hint" id="incomeLockHint">🔒</small></span>
+            <strong id="incomeAmount" class="income-blurred">₪0</strong>
+          </article>
+          <article class="stat-card stat-spent">
+            <div class="stat-icon" aria-hidden="true">▭</div>
+            <span>הוצאות בפועל</span>
+            <strong id="spentAmount">₪0</strong>
+          </article>
+          <article id="fixedStatCard" class="stat-card clickable-card stat-fixed" role="button" tabindex="0">
+            <div class="stat-icon" aria-hidden="true">□</div>
+            <span>קבועות החודש</span>
+            <strong id="fixedAmount">₪0</strong>
+          </article>
+          <article class="stat-card stat-forecast">
+            <div class="stat-icon" aria-hidden="true">↗</div>
+            <span>תחזית סוף חודש</span>
+            <strong id="forecastAmount">₪0</strong>
+          </article>
         </section>
 
-        <section class="panel">
-          <div class="category-chart-wrap" style="margin-top:0">
+        <section class="panel home-chart-panel">
+          <div class="home-panel-title">התפלגות הוצאות בפועל</div>
+          <div class="home-chart-layout">
             <div id="categoryPie" class="category-pie"></div>
+            <div id="categoryLegend" class="home-chart-legend"></div>
           </div>
         </section>
 
-        <section class="panel">
-          <div class="panel-head"><div><p class="eyebrow">אחרונות</p><h2>עסקאות</h2></div></div>
+        <section class="panel home-transactions-panel">
+          <div class="panel-head home-transactions-head"><div><p class="eyebrow">אחרונות</p><h2>עסקאות</h2></div></div>
           <div id="recentTransactions" class="transaction-list empty-state">אין עדיין עסקאות</div>
         </section>
       </section>
@@ -252,6 +271,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=68"></script>
+  <script src="./app.js?v=70"></script>
 </body>
 </html>
