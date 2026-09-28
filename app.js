@@ -504,6 +504,7 @@ async function loadAll(){
 
 function renderCategoryPie(){
   const container=$("categoryPie");
+  const legend=$("categoryLegend");
   if(!container||!window.echarts)return;
 
   const byCat={};
@@ -511,162 +512,81 @@ function renderCategoryPie(){
     const key=t.categories?.name||"ללא קטגוריה";
     byCat[key]=(byCat[key]||0)+Number(t.amount||0);
   });
-  const entries=Object.entries(byCat).sort((x,y)=>y[1]-x[1]);
+  const entries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
 
   if(!entries.length){
     selectedCategoryIndex=null;
     if(categoryPieChart){categoryPieChart.dispose();categoryPieChart=null;}
     container.innerHTML='<div class="empty-state chart-empty">אין עדיין עסקאות</div>';
+    if(legend)legend.innerHTML="";
     return;
   }
 
-  if(selectedCategoryIndex!==null && !entries[selectedCategoryIndex]) selectedCategoryIndex=null;
-
-  const total=entries.reduce((sum,[,value])=>sum+value,0);
+  const total=entries.reduce((s,[,v])=>s+v,0);
   const data=entries.map(([name,value],index)=>({
     name,
     value,
-    selected:index===selectedCategoryIndex,
     itemStyle:{
       color:PIE_COLORS[index%PIE_COLORS.length],
-      borderColor:"rgba(8,12,20,.88)",
-      borderWidth:3,
-      borderRadius:9,
-      shadowBlur:index===selectedCategoryIndex?22:10,
-      shadowOffsetY:index===selectedCategoryIndex?8:4,
-      shadowColor:index===selectedCategoryIndex?"rgba(0,0,0,.52)":"rgba(0,0,0,.24)",
-      opacity:selectedCategoryIndex===null||index===selectedCategoryIndex?1:.38
+      borderColor:"#0d1929",
+      borderWidth:2
     }
   }));
 
-  if(categoryPieChart) categoryPieChart.dispose();
+  if(legend){
+    legend.innerHTML=data.map((item,index)=>{
+      const pct=Math.round((Number(item.value)/total)*100);
+      return `<div class="home-legend-row"><i class="home-legend-dot" style="background:${PIE_COLORS[index%PIE_COLORS.length]}"></i><span class="home-legend-name">${escapeHtml(item.name)}</span><strong class="home-legend-pct">${pct}%</strong></div>`;
+    }).join("");
+  }
+
+  if(categoryPieChart)categoryPieChart.dispose();
   container.innerHTML="";
   categoryPieChart=echarts.init(container);
 
-  const centerTitle=selectedCategoryIndex===null?"סה״כ":data[selectedCategoryIndex].name;
-  const centerValue=selectedCategoryIndex===null?money(total):money(data[selectedCategoryIndex].value);
-
   categoryPieChart.setOption({
-    animationDuration:650,
+    animationDuration:600,
     animationEasing:"cubicOut",
-    tooltip:{show:false},
+    tooltip:{
+      trigger:"item",
+      formatter:p=>`${escapeHtml(p.name)}<br>${money(p.value)} · ${Math.round(p.percent)}%`
+    },
     series:[{
       type:"pie",
-      radius:["27%","45%"],
-      center:["50%","48%"],
-      startAngle:110,
-      selectedMode:"single",
-      selectedOffset:11,
-      minAngle:4,
+      radius:"73%",
+      center:["50%","52%"],
+      startAngle:90,
+      minAngle:3,
       avoidLabelOverlap:true,
       label:{
         show:true,
-        position:"outside",
-        alignTo:"edge",
-        edgeDistance:18,
-        distanceToLabelLine:8,
-        bleedMargin:2,
-        width:112,
-        overflow:"break",
-        color:"#EAF0FA",
-        formatter:p=>`${p.name}\n${money(p.value)}`,
-        fontWeight:800,
-        fontSize:15,
-        lineHeight:22
+        position:"inside",
+        formatter:p=>p.percent>=5?`${Math.round(p.percent)}%`:"",
+        color:"#fff",
+        fontSize:14,
+        fontWeight:800
       },
-      labelLine:{
-        show:true,
-        length:30,
-        length2:22,
-        minTurnAngle:80,
-        maxSurfaceAngle:80,
-        smooth:false,
-        lineStyle:{color:"#93A3BA",width:1.55}
-      },
-      labelLayout:params=>{
-        const points=params.labelLinePoints;
-        if(!points||points.length<3)return{hideOverlap:false,draggable:false};
-
-        const w=container.clientWidth;
-        const h=container.clientHeight;
-        const cx=w*.50;
-        const cy=h*.48;
-
-        const dx=points[0][0]-cx;
-        const dy=points[0][1]-cy;
-        const d=Math.hypot(dx,dy)||1;
-        const r=Math.min(w,h)*.225-5;
-        points[0]=[cx+(dx/d)*r,cy+(dy/d)*r];
-
-        const slices=data.map((item,index)=>{
-          const before=data.slice(0,index).reduce((s,x)=>s+Number(x.value||0),0);
-          const sweep=(Number(item.value||0)/total)*360;
-          const mid=110-((before/total)*360)-(sweep/2);
-          const rad=mid*Math.PI/180;
-          return{
-            index,
-            side:Math.cos(rad)>=0?"right":"left",
-            naturalY:cy-Math.sin(rad)*r
-          };
-        });
-
-        const current=slices[params.dataIndex];
-        const sameSide=slices
-          .filter(x=>x.side===current.side)
-          .sort((a,b)=>a.naturalY-b.naturalY);
-
-        const rank=sameSide.findIndex(x=>x.index===params.dataIndex);
-        const top=54;
-        const bottom=h-58;
-        const slot=sameSide.length<=1
-          ? (top+bottom)/2
-          : top+(rank*(bottom-top)/(sameSide.length-1));
-
-        const spreadY=current.naturalY+((slot-current.naturalY)*0.5);
-        const labelH=params.labelRect?.height||44;
-        points[1][1]=spreadY;
-        points[2][1]=spreadY;
-
-        return{
-          y:spreadY-(labelH/2),
-          labelLinePoints:points,
-          hideOverlap:false,
-          draggable:false
-        };
-      },
+      labelLine:{show:false},
       emphasis:{
         scale:true,
-        scaleSize:13,
-        label:{color:"#FFFFFF",fontSize:18,fontWeight:900,lineHeight:24},
-        labelLine:{lineStyle:{color:"#FFFFFF",width:2}},
-        itemStyle:{shadowBlur:28,shadowOffsetY:10,shadowColor:"rgba(0,0,0,.55)"}
+        scaleSize:8,
+        itemStyle:{shadowBlur:18,shadowColor:"rgba(0,0,0,.45)"}
       },
       data
-    }],
-    graphic:[
-      {type:"text",left:"center",top:"39.5%",style:{text:centerTitle,fill:selectedCategoryIndex===null?"#91A0B5":"#D9E3F2",fontSize:selectedCategoryIndex===null?12:14,fontWeight:700}},
-      {type:"text",left:"center",top:"48%",style:{text:centerValue,fill:"#FFFFFF",fontSize:24,fontWeight:900}}
-    ]
+    }]
   },true);
 
-  categoryPieChart.off("click");
-  categoryPieChart.on("click",params=>{
-    selectedCategoryIndex=selectedCategoryIndex===params.dataIndex?null:params.dataIndex;
-    renderCategoryPie();
-  });
-
-  if(!window.__categoryPieOutsideClickBound){
-    window.__categoryPieOutsideClickBound=true;
-    document.addEventListener("pointerdown",e=>{
-      if(selectedCategoryIndex===null)return;
-      const pie=$("categoryPie");
-      if(pie && pie.contains(e.target))return;
-      selectedCategoryIndex=null;
-      renderCategoryPie();
-    },{passive:true});
-  }
-
   setTimeout(()=>categoryPieChart?.resize(),40);
+}
+
+function txCategoryIcon(name=""){
+  const n=String(name||"").toLowerCase();
+  if(n.includes("מזון")||n.includes("אוכל")||n.includes("סופר"))return "🛒";
+  if(n.includes("רכב")||n.includes("תחבורה")||n.includes("דלק"))return "🚗";
+  if(n.includes("בריאות")||n.includes("פארם"))return "✚";
+  if(n.includes("בילוי"))return "★";
+  if(n.includes("קניות"))return "▣";
+  return "₪";
 }
 
 function render(){
@@ -685,7 +605,7 @@ function render(){
 
   renderCategoryPie();
 
-  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}${t.latitude!=null&&t.longitude!=null?" · 📍":""}</small></div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
+  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><span class="tx-category-icon">${txCategoryIcon(t.categories?.name)}</span><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.categories?.name||"ללא קטגוריה")} · ${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")}${t.latitude!=null&&t.longitude!=null?" · 📍":""}</small></div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
   bindTransactionLongPress($("recentTransactions"));
   renderTransactionSearch();
