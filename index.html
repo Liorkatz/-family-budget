@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.67</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.68</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -125,6 +125,9 @@
       <section id="analysisPage" class="page">
         <div class="page-title"><div><p class="eyebrow">ניתוח</p><h2>תמונת מצב</h2></div></div>
 
+        <section class="panel"><div id="memberBreakdown"></div></section>
+        <section class="panel"><div id="budgetBreakdown"></div></section>
+
         <section class="panel map-panel">
           <div class="map-head">
             <div>
@@ -136,9 +139,6 @@
           <div id="purchaseMap" aria-label="מפת רכישות"></div>
           <div id="mapLocationMeta" class="map-meta"></div>
         </section>
-
-        <section class="panel"><div id="memberBreakdown"></div></section>
-        <section class="panel"><div id="budgetBreakdown"></div></section>
       </section>
 
       <section id="settingsPage" class="page">
@@ -243,7 +243,7 @@
       <div class="dialog-head"><h3>Token ל־Shortcut</h3><button type="button" id="closeTokenDialog">×</button></div>
       <p class="muted">זהו קוד אישי שמאפשר לאייפון שלך לשלוח עסקאות מ־Apple Pay ישירות לחשבון המשפחתי. את הטוקן מדביקים באוטומציה של קיצורי דרך בשדה <strong>x-shortcut-token</strong>. הטוקן מוצג פעם אחת בלבד, לכן מומלץ להעתיק אותו מיד.</p>
       <textarea id="tokenValue" readonly></textarea>
-      <button id="copyToken" class="primary">העתק Token</button>
+      <button id="copyToken" class="primary">📋 העתק Token</button>
       <p class="endpoint">Endpoint:<br><code>https://ugdaeyfxxcaxloukqqkk.supabase.co/functions/v1/apple-pay</code></p>
     </div>
   </dialog>
@@ -252,6 +252,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=67"></script>
+  <script src="./app.js?v=68"></script>
 </body>
 </html>
