@@ -27,3 +27,34 @@ body.money-live-page #homePage>:not(.money-live-scene){display:none!important}
 .money-live-status{position:absolute;z-index:10;left:50%;bottom:86px;transform:translateX(-50%);font:600 10px Heebo,sans-serif;color:rgba(255,255,255,.62);white-space:nowrap;direction:rtl;text-shadow:0 2px 10px #000}
 @media(max-width:600px){.money-live-scene{min-height:calc(100svh - 126px);border-radius:22px}.money-live-art{width:205vw;top:53%}.money-live-top{top:14px;right:13px;left:13px}.money-live-balance{bottom:104px}}
 @media(prefers-reduced-motion:reduce){.money-live-note{display:none}.money-live-art{transition:none!important}}
+.money-live-bills{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+.money-live-bill{position:absolute;left:50%;top:54%;width:min(1500px,150vw);max-width:none;transform:translate(-50%,-50%);transform-origin:50% 50%;will-change:transform,filter,opacity;filter:drop-shadow(0 14px 18px rgba(0,0,0,.28));opacity:.96}
+.bill-a{clip-path:polygon(5% 14%,29% 14%,30% 34%,5% 34%);animation:billFlyA 6.6s ease-in-out infinite}
+.bill-b{clip-path:polygon(57% 13%,69% 13%,69% 28%,56% 28%);animation:billFlyB 7.4s ease-in-out -1.5s infinite}
+.bill-c{clip-path:polygon(76% 24%,92% 24%,92% 45%,75% 45%);animation:billFlyC 6.9s ease-in-out -.7s infinite}
+.bill-d{clip-path:polygon(22% 57%,45% 57%,45% 72%,22% 72%);animation:billFlyD 8.2s ease-in-out -2.1s infinite}
+.bill-e{clip-path:polygon(62% 55%,82% 55%,82% 75%,61% 75%);animation:billFlyE 7.8s ease-in-out -3.2s infinite}
+.bill-f{clip-path:polygon(1% 36%,18% 36%,18% 58%,1% 58%);animation:billFlyF 9.1s ease-in-out -4s infinite}
+@keyframes billFlyA{0%,100%{transform:translate(-50%,-50%) translate3d(-8vw,1vh,0) rotate(-4deg) scale(1.02)}50%{transform:translate(-50%,-50%) translate3d(9vw,-12vh,90px) rotate(16deg) scale(1.16)}}
+@keyframes billFlyB{0%,100%{transform:translate(-50%,-50%) translate3d(0,0,0) rotate(2deg) scale(1)}50%{transform:translate(-50%,-50%) translate3d(13vw,9vh,120px) rotate(-20deg) scale(1.14)}}
+@keyframes billFlyC{0%,100%{transform:translate(-50%,-50%) translate3d(5vw,1vh,0) rotate(6deg) scale(1.02)}50%{transform:translate(-50%,-50%) translate3d(-12vw,-10vh,140px) rotate(24deg) scale(1.2)}}
+@keyframes billFlyD{0%,100%{transform:translate(-50%,-50%) translate3d(-4vw,0,0) rotate(-3deg) scale(1)}50%{transform:translate(-50%,-50%) translate3d(10vw,-15vh,80px) rotate(19deg) scale(1.12)}}
+@keyframes billFlyE{0%,100%{transform:translate(-50%,-50%) translate3d(4vw,1vh,0) rotate(1deg) scale(1)}50%{transform:translate(-50%,-50%) translate3d(-11vw,-13vh,100px) rotate(-18deg) scale(1.18)}}
+@keyframes billFlyF{0%,100%{transform:translate(-50%,-50%) translate3d(-2vw,4vh,0) rotate(-7deg) scale(.98)}50%{transform:translate(-50%,-50%) translate3d(14vw,-6vh,75px) rotate(22deg) scale(1.12)}}
+.money-live-art{animation:mountainBreath 5.8s ease-in-out infinite}
+@keyframes mountainBreath{
+  0%,100%{filter:drop-shadow(0 28px 34px rgba(0,0,0,.32)) brightness(1);transform:translate(-50%,-50%) perspective(1200px) rotateY(var(--live-yaw,0deg)) rotateX(var(--live-pitch,0deg)) scale(var(--live-scale,.93))}
+  50%{filter:drop-shadow(0 34px 42px rgba(0,0,0,.38)) brightness(1.035);transform:translate(-50%,-50%) perspective(1200px) rotateY(calc(var(--live-yaw,0deg) + 1.2deg)) rotateX(calc(var(--live-pitch,0deg) - .5deg)) scale(calc(var(--live-scale,.93) * 1.018))}
+}
+.money-live-scene::after{content:"";position:absolute;inset:0;z-index:7;pointer-events:none;background:
+radial-gradient(circle at 18% 24%,rgba(255,255,255,.85) 0 1px,transparent 2px),
+radial-gradient(circle at 73% 18%,rgba(255,220,145,.9) 0 1px,transparent 2px),
+radial-gradient(circle at 83% 46%,rgba(145,211,255,.75) 0 1.2px,transparent 2.4px);
+background-size:190px 180px,240px 210px,280px 260px;animation:sparkleDrift 8s linear infinite;opacity:.72}
+@keyframes sparkleDrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-40px,28px,0)}}
+@media(max-width:600px){
+  .money-live-bill{width:205vw;top:53%}
+}
+@media(prefers-reduced-motion:reduce){
+  .money-live-bill,.money-live-art,.money-live-scene::after{animation:none!important}
+}
