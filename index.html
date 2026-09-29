@@ -10,12 +10,12 @@
   <link rel="manifest" href="./manifest.webmanifest?v=48" />
   <link rel="icon" type="image/png" sizes="180x180" href="./icon-180-v48.png?v=48" />
   <link rel="apple-touch-icon" sizes="180x180" href="./icon-180-v48.png?v=48" />
-<title>Family Budget</title>
+<title>Family Budget 2.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=73" />
+  <link rel="stylesheet" href="./styles.css?v=200" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.73</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.0</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -170,6 +170,29 @@
 
       <section id="settingsPage" class="page">
         <div class="page-title"><div><p class="eyebrow">ניהול</p><h2>הגדרות</h2></div></div>
+
+        <details id="privacyCard" class="settings-card privacy-card" open>
+          <summary>פרטיות ואחסון</summary>
+          <div class="privacy-hero">
+            <span class="privacy-lock">🔒</span>
+            <div>
+              <strong>המידע הכספי נשמר במכשיר הזה</strong>
+              <p>מגרסה 2.0 עסקאות, הכנסות, קטגוריות, תקציבים, הוצאות קבועות ומיקומים נשמרים מקומית במכשיר.</p>
+            </div>
+          </div>
+          <div class="privacy-grid">
+            <div><span>שם משתמש</span><strong>שרת</strong></div>
+            <div><span>אימייל</span><strong>שרת</strong></div>
+            <div><span>שיוך למשפחה</span><strong>שרת</strong></div>
+            <div><span>Token לקיצור</span><strong>שרת</strong></div>
+            <div><span>הוצאות והכנסות</span><strong class="local-only">מכשיר בלבד</strong></div>
+            <div><span>סכומים ומיקומים</span><strong class="local-only">מכשיר בלבד</strong></div>
+            <div><span>קטגוריות ותקציבים</span><strong class="local-only">מכשיר בלבד</strong></div>
+            <div><span>סטטיסטיקת שימוש</span><strong>מונה בלבד</strong></div>
+          </div>
+          <p class="privacy-note">השרת מקבל רק זמן שימוש אחרון, גרסת אפליקציה ומספר פעולות מצטבר — ללא סכומים, קטגוריות, מיקומים או תוכן העסקאות.</p>
+          <p class="privacy-legacy">נתוני עבר נשארים זמנית בשרת לצורך מעבר בטוח של כל מכשירי המשפחה לגרסה 2.0. לאחר השלמת המעבר ניתן למחוק אותם.</p>
+        </details>
 
         <details id="familyAdminCard" class="settings-card" open>
           <summary>ניהול המשפחה</summary>
@@ -268,7 +291,7 @@
   <dialog id="tokenDialog">
     <div class="dialog-card">
       <div class="dialog-head"><h3>Token ל־Shortcut</h3><button type="button" id="closeTokenDialog">×</button></div>
-      <p class="muted">זהו קוד אישי שמאפשר לאייפון שלך לשלוח עסקאות מ־Apple Pay ישירות לחשבון המשפחתי. את הטוקן מדביקים באוטומציה של קיצורי דרך בשדה <strong>x-shortcut-token</strong>. הטוקן מוצג פעם אחת בלבד, לכן מומלץ להעתיק אותו מיד.</p>
+      <p class="muted"><strong>קיצור Legacy:</strong> הטוקן הקיים משמש את קיצור Apple Pay הישן. בגרסה 2.0 המידע הכספי באתר נשמר במכשיר; קיצור Apple Pay יעבור בשלב הבא למסלול מקומי כדי שלא ישמור עסקאות בשרת.</p>
       <textarea id="tokenValue" readonly></textarea>
       <button id="copyToken" class="primary">📋 העתק Token</button>
       <p class="endpoint">Endpoint:<br><code>https://ugdaeyfxxcaxloukqqkk.supabase.co/functions/v1/apple-pay</code></p>
@@ -279,6 +302,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=73"></script>
+  <script src="./app.js?v=200"></script>
 </body>
 </html>
