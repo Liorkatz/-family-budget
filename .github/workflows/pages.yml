@@ -41,7 +41,7 @@ jobs:
           base64 -d money-mountain-base.jpg.b64 > _site/money-mountain-base.jpg
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: "_site"
 
