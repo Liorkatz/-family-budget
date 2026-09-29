@@ -2828,3 +2828,21 @@ body{
     padding:9px 8px;
   }
 }
+
+
+/* v2.0 - privacy and local-first storage */
+.privacy-card{border-color:rgba(69,211,158,.24)!important}
+.privacy-hero{display:flex;gap:12px;align-items:flex-start;padding:8px 0 14px}
+.privacy-lock{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:rgba(53,228,170,.12);font-size:20px;flex:0 0 auto}
+.privacy-hero strong{display:block;color:#f6fbff;font-size:16px;margin-bottom:4px}
+.privacy-hero p,.privacy-note,.privacy-legacy{margin:0;color:#9fb0c5;font-size:13px;line-height:1.55}
+.privacy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 12px}
+.privacy-grid>div{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 11px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(151,177,216,.10)}
+.privacy-grid span{color:#a8b5c6;font-size:12px}
+.privacy-grid strong{color:#dbe5f1;font-size:12px;white-space:nowrap}
+.privacy-grid .local-only{color:#54dfb4}
+.privacy-note{padding-top:2px}
+.privacy-legacy{margin-top:10px;padding:10px 11px;border-radius:12px;background:rgba(255,190,72,.07);border:1px solid rgba(255,190,72,.14);color:#cbbd9b}
+@media(max-width:480px){
+  .privacy-grid{grid-template-columns:1fr}
+}
