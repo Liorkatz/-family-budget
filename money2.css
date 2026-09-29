@@ -2,8 +2,8 @@ body.money2-page{--m2bg1:#06101c;--m2bg2:#10283a;--m2gold:#efc56d;background:#06
 body.money2-page #homePage{padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
 body.money2-page #homePage>:not(.money2-scene){display:none!important}
 .money2-scene{position:relative;min-height:calc(100svh - 125px);overflow:hidden;border-radius:30px;background:
-radial-gradient(circle at 70% 20%,rgba(255,196,94,.19),transparent 27%),
-linear-gradient(180deg,#16374e 0%,#0b1e2c 43%,#06111d 100%);box-shadow:0 26px 70px rgba(0,0,0,.34);isolation:isolate}
+linear-gradient(180deg,rgba(4,15,29,.12) 0%,rgba(5,16,28,.18) 48%,rgba(4,10,18,.55) 100%),
+url('./money-bg-blue.jpg') center center / cover no-repeat;box-shadow:0 26px 70px rgba(0,0,0,.34);isolation:isolate}
 .money2-top{position:absolute;inset:20px 20px auto 20px;z-index:20;display:flex;justify-content:space-between;align-items:flex-start;direction:rtl;color:#fff;pointer-events:none}
 .money2-top>div{pointer-events:none}
 .money2-kicker{font:800 10px/1 Heebo,sans-serif;letter-spacing:.18em;color:#98b9c8}
