@@ -35,6 +35,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html app.js styles.css config.js manifest.webmanifest icon-180-v48.png money.html money.css money.js money2.html money2.css money2.js _site/
+          base64 -d money-bg-blue.jpg.b64 > _site/money-bg-blue.jpg
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
