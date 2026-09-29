@@ -34,8 +34,9 @@ jobs:
       - name: Prepare minimal site artifact
         run: |
           mkdir -p _site
-          cp index.html app.js styles.css config.js manifest.webmanifest icon-180-v48.png money.html money.css money.js money2.html money2.css money2.js money3.html money3.css money3.js _site/
+          cp index.html app.js styles.css config.js manifest.webmanifest icon-180-v48.png money.html money.css money.js money2.html money2.css money2.js money3.html money3.css money3.js money-live.html money-live.css money-live.js _site/
           base64 -d money-bg-blue.jpg.b64 > _site/money-bg-blue.jpg
+          base64 -d money-live-scene.jpg.b64 > _site/money-live-scene.jpg
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
