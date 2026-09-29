@@ -951,10 +951,23 @@ function bindTransactionLongPress(container){
 function renderTransactionSearch(){
   const q=($("transactionSearch")?.value||"").trim().toLowerCase();
   const categoryFilter=$("transactionCategoryFilter")?.value||"";
+  const amountFilter=$("transactionAmountFilter")?.value||"";
   let rows=state.transactions;
 
   if(categoryFilter){
     rows=rows.filter(t=>categoryFilter==="__none__"?!t.category_id:t.category_id===categoryFilter);
+  }
+
+  if(amountFilter){
+    rows=rows.filter(t=>{
+      const amount=Number(t.amount||0);
+      if(amountFilter==="0-50") return amount<50;
+      if(amountFilter==="50-100") return amount>=50 && amount<100;
+      if(amountFilter==="100-250") return amount>=100 && amount<250;
+      if(amountFilter==="250-500") return amount>=250 && amount<500;
+      if(amountFilter==="500+") return amount>=500;
+      return true;
+    });
   }
 
   if(q){
@@ -973,7 +986,7 @@ function renderTransactionSearch(){
   $("allTransactions").innerHTML=(rows.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div></div>`).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
   bindTransactionLongPress($("allTransactions"));
 
-  const active=Boolean(q||categoryFilter);
+  const active=Boolean(q||categoryFilter||amountFilter);
   const filteredTotal=rows.reduce((sum,t)=>sum+Number(t.amount||0),0);
   if($("transactionFilterTotal")){
     const totalEl=$("transactionFilterTotal");
@@ -983,12 +996,14 @@ function renderTransactionSearch(){
   if($("transactionSearchMeta")){
     $("transactionSearchMeta").classList.toggle("hidden",!active);
     const catName=categoryFilter==="__none__"?"ללא קטגוריה":state.categories.find(c=>c.id===categoryFilter)?.name;
-    $("transactionSearchMeta").textContent=active?`${rows.length} תוצאות מתוך ${state.transactions.length}${catName?` · ${catName}`:""}`:"";
+    const amountLabel={"0-50":"עד 50 ₪","50-100":"50–100 ₪","100-250":"100–250 ₪","250-500":"250–500 ₪","500+":"500 ₪ ומעלה"}[amountFilter]||"";
+    $("transactionSearchMeta").textContent=active?`${rows.length} תוצאות מתוך ${state.transactions.length}${catName?` · ${catName}`:""}${amountLabel?` · ${amountLabel}`:""}`:"";
   }
   if($("clearTransactionSearch")) $("clearTransactionSearch").classList.toggle("hidden",!q);
 }
 $("transactionSearch").oninput=renderTransactionSearch;
 $("transactionCategoryFilter").onchange=renderTransactionSearch;
+$("transactionAmountFilter").onchange=renderTransactionSearch;
 $("clearTransactionSearch").onclick=()=>{$("transactionSearch").value="";renderTransactionSearch();$("transactionSearch").focus();};
 $("incomeStatCard").onclick=toggleIncomeVisibility;
 $("incomeStatCard").onkeydown=(e)=>{
