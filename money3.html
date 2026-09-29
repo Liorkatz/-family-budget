@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#07101D" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Family Budget" />
+  <link rel="manifest" href="./manifest.webmanifest?v=48" />
+  <link rel="icon" type="image/png" sizes="180x180" href="./icon-180-v48.png?v=48" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icon-180-v48.png?v=48" />
+<title>Family Budget — Money Mountain 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="./styles.css?v=73" />
+  <link rel="stylesheet" href="./money3.css?v=1" />
+</head>
+<body class="money3-page">
+<div id="toast" class="toast"></div>
+
+  <main class="shell">
+    <section id="authView" class="auth-card">
+      <div class="brand-mark">₪</div>
+      <p class="eyebrow">FAMILY BUDGET</p>
+      <h1>התקציב המשפחתי שלך</h1>
+      <p class="muted">כניסה מאובטחת לנתונים, תקציבים ועסקאות Apple Pay.</p>
+      <form id="authForm" class="form-stack">
+        <input id="authEmail" type="email" autocomplete="email" placeholder="אימייל" required />
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="סיסמה" required />
+        <button class="primary" type="submit">כניסה</button>
+      </form>
+      <button id="toggleAuthMode" class="link-btn" type="button">אין חשבון? צור חשבון</button>
+    </section>
+
+    <section id="bootstrapView" class="auth-card hidden">
+      <p class="eyebrow">הגדרה ראשונית</p>
+      <h1>משפחה חדשה או קיימת?</h1>
+
+      <div id="pendingJoinBox" class="pending-box hidden">
+        <strong>בקשת ההצטרפות ממתינה לאישור</strong>
+        <p id="pendingJoinText" class="muted"></p>
+      </div>
+
+      <div id="familyChoiceBox">
+        <form id="bootstrapForm" class="form-stack">
+          <h3>צור משפחה חדשה</h3>
+          <input id="familyName" placeholder="שם המשפחה, למשל משפחת כץ" required />
+          <input id="displayName" placeholder="השם שלך" required />
+          <button class="primary" type="submit">צור משפחה</button>
+        </form>
+
+        <div class="or-divider"><span>או</span></div>
+
+        <form id="joinFamilyForm" class="form-stack">
+          <h3>הצטרף למשפחה קיימת</h3>
+          <input id="joinDisplayName" placeholder="השם שלך" required />
+          <input id="joinCode" placeholder="קוד משפחה, למשל FAM-ABC123" autocapitalize="characters" required />
+          <button class="primary secondary" type="submit">שלח בקשת הצטרפות</button>
+        </form>
+      </div>
+
+      <button id="bootstrapLogout" class="link-btn" type="button">התנתק</button>
+    </section>
+
+    <section id="appView" class="hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="familyTitle">תקציב משפחתי</p>
+          <div class="month-switcher">
+            <button id="prevMonth" type="button" aria-label="חודש קודם">‹</button>
+            <h1 id="monthTitle">החודש</h1>
+            <button id="nextMonth" type="button" aria-label="חודש הבא">›</button>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v1.0.73</button>
+          <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
+        </div>
+      </header>
+
+      <section id="homePage" class="page active">
+        <section class="money3-scene" aria-label="הר הכסף בתלת־ממד">
+  <div class="money3-bg" aria-hidden="true"></div>
+  <canvas id="money3Canvas" aria-label="הר כסף תלת־ממדי"></canvas>
+  <div class="money3-vignette" aria-hidden="true"></div>
+  <div class="money3-top">
+    <div><div class="money3-kicker">FAMILY BUDGET</div><h2>הר הכסף</h2><p>גרור כדי להסתובב סביב ההר</p></div>
+    <a class="money3-back" href="./index.html">חזרה</a>
+  </div>
+  <div class="money3-balance"><small>פנוי החודש</small><strong id="money3Balance">₪0</strong></div>
+  <div class="money3-controls">
+    <button id="money3Shrink" type="button" aria-label="הקטן את ההר">−</button>
+    <div><span>גודל ההר</span><small>בדיקת שינוי יתרה</small></div>
+    <button id="money3Grow" type="button" aria-label="הגדל את ההר">+</button>
+  </div>
+  <div id="money3Status" class="money3-status">WebGL פעיל • גרור לצדדים</div>
+</section>
+        <article class="hero-card home-hero-card">
+          <div class="hero-wallet-icon" aria-hidden="true">▣</div>
+          <p>פנוי אמיתי החודש</p>
+          <div class="hero-amount" id="availableAmount">₪0</div>
+          <div class="hero-sub">הכנסות פחות הוצאות בפועל והוצאות קבועות שטרם שולמו</div>
+        </article>
+
+        <section class="stats-grid home-stats-grid">
+          <article id="incomeStatCard" class="stat-card income-private stat-income" role="button" tabindex="0" aria-label="הכנסות מוסתרות. לחץ להצגה">
+            <div class="stat-icon" aria-hidden="true">▥</div>
+            <span>הכנסות <small class="income-lock-hint" id="incomeLockHint">🔒</small></span>
+            <strong id="incomeAmount" class="income-blurred">₪0</strong>
+          </article>
+          <article class="stat-card stat-spent">
+            <div class="stat-icon" aria-hidden="true">▭</div>
+            <span>הוצאות בפועל</span>
+            <strong id="spentAmount">₪0</strong>
+          </article>
+          <article id="fixedStatCard" class="stat-card clickable-card stat-fixed" role="button" tabindex="0">
+            <div class="stat-icon" aria-hidden="true">□</div>
+            <span>קבועות החודש</span>
+            <strong id="fixedAmount">₪0</strong>
+          </article>
+          <article class="stat-card stat-forecast">
+            <div class="stat-icon" aria-hidden="true">↗</div>
+            <span>תחזית סוף חודש</span>
+            <strong id="forecastAmount">₪0</strong>
+          </article>
+        </section>
+
+        <section class="panel home-chart-panel">
+          <div class="home-panel-title">התפלגות הוצאות בפועל</div>
+          <div class="home-chart-layout">
+            <div id="categoryPie" class="category-pie"></div>
+            <div id="categoryLegend" class="home-chart-legend"></div>
+          </div>
+        </section>
+
+        <section class="panel home-transactions-panel">
+          <div class="panel-head home-transactions-head"><div><p class="eyebrow">אחרונות</p><h2>עסקאות</h2></div></div>
+          <div id="recentTransactions" class="transaction-list empty-state">אין עדיין עסקאות</div>
+        </section>
+      </section>
+
+      <section id="transactionsPage" class="page">
+        <div class="page-title"><div><p class="eyebrow">תנועות</p><h2>עסקאות</h2></div><div class="page-actions"><button id="testTransaction" class="small-btn secondary-btn">צור נתוני בדיקה</button><button id="openAddTransaction" class="small-btn">+ הוסף</button></div></div>
+        <div class="transaction-filters">
+          <div class="transaction-search-wrap">
+            <input id="transactionSearch" type="search" placeholder="חיפוש לפי בית עסק, בן משפחה, קטגוריה או סכום…" autocomplete="off" />
+            <button id="clearTransactionSearch" class="search-clear hidden" type="button">×</button>
+          </div>
+          <select id="transactionCategoryFilter" aria-label="סינון לפי קטגוריה">
+            <option value="">כל הקטגוריות</option>
+          </select>
+          <select id="transactionAmountFilter" aria-label="סינון לפי סכום">
+            <option value="">כל הסכומים</option>
+            <option value="0-50">עד 50 ₪</option>
+            <option value="50-100">50–100 ₪</option>
+            <option value="100-250">100–250 ₪</option>
+            <option value="250-500">250–500 ₪</option>
+            <option value="500+">500 ₪ ומעלה</option>
+          </select>
+        </div>
+        <div id="transactionSearchMeta" class="search-meta hidden"></div>
+        <div id="allTransactions" class="transaction-list panel"></div>
+        <div id="transactionFilterTotal" class="filter-total hidden" aria-live="polite"></div>
+      </section>
+
+      <section id="analysisPage" class="page">
+        <div class="page-title"><div><p class="eyebrow">ניתוח</p><h2>תמונת מצב</h2></div></div>
+
+        <section class="panel"><div id="memberBreakdown"></div></section>
+        <section class="panel"><div id="budgetBreakdown"></div></section>
+
+        <section class="panel map-panel">
+          <div class="map-head">
+            <div>
+              <p class="eyebrow">רכישות עם מיקום</p>
+              <h3>מפת הוצאות</h3>
+            </div>
+            <strong id="mapLocationCount">0</strong>
+          </div>
+          <div id="purchaseMap" aria-label="מפת רכישות"></div>
+          <div id="mapLocationMeta" class="map-meta"></div>
+        </section>
+      </section>
+
+      <section id="settingsPage" class="page">
+        <div class="page-title"><div><p class="eyebrow">ניהול</p><h2>הגדרות</h2></div></div>
+
+        <details id="familyAdminCard" class="settings-card" open>
+          <summary>ניהול המשפחה</summary>
+          <div class="family-code-box compact-family-code">
+            <div class="family-code-current">
+              <small id="familyCodeLabel">קוד משפחה</small>
+              <strong id="familyCodeHint" dir="ltr">לא הוגדר</strong>
+            </div>
+            <button id="rotateFamilyCode" class="small-btn" type="button">קוד אקראי</button>
+          </div>
+          <div id="customFamilyCodeForm" class="inline-form family-code-form compact-family-form">
+            <input id="customFamilyCode" minlength="6" maxlength="24" placeholder="קוד חדש" autocapitalize="characters" />
+            <button id="saveFamilyCode" class="small-btn" type="button">שמור</button>
+          </div>
+          <div id="pendingRequests" class="settings-list compact-pending hidden"></div>
+        </details>
+
+        <details class="settings-card" open>
+          <summary>בני משפחה</summary>
+          <div id="membersList" class="settings-list"></div>
+        </details>
+
+        <details class="settings-card">
+          <summary>הכנסות</summary>
+          <form id="incomeForm" class="inline-form three">
+            <input id="incomeDesc" placeholder="תיאור" required />
+            <input id="incomeValue" type="number" min="0" step="0.01" placeholder="סכום" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="incomeList" class="settings-list"></div>
+        </details>
+
+        <details id="fixedExpensesCard" class="settings-card">
+          <summary>הוצאות קבועות</summary>
+          <p class="muted compact">מלא רק את מה שרלוונטי. סעיף שלא בשימוש נשאר על 0.</p>
+          <form id="fixedForm" class="inline-form three fixed-add-form">
+            <input id="fixedDesc" placeholder="הוצאה קבועה נוספת" required />
+            <input id="fixedValue" type="number" min="0" step="0.01" placeholder="סכום" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="fixedList" class="settings-list"></div>
+        </details>
+
+        <details class="settings-card">
+          <summary>קטגוריות ותקציבים</summary>
+          <form id="categoryForm" class="inline-form">
+            <input id="categoryName" placeholder="קטגוריה חדשה" required />
+            <button class="small-btn" type="submit">הוסף</button>
+          </form>
+          <div id="categoriesList" class="settings-list"></div>
+        </details>
+      </section>
+    </section>
+  </main>
+
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <button data-page="homePage" class="active"><span>⌂</span><small>בית</small></button>
+    <button data-page="analysisPage"><span>◫</span><small>ניתוח</small></button>
+    <button data-page="transactionsPage"><span>₪</span><small>עסקאות</small></button>
+    <button data-page="settingsPage"><span>⚙︎</span><small>הגדרות</small></button>
+  </nav>
+
+  <dialog id="transactionDialog">
+    <form id="transactionForm" method="dialog" class="dialog-card">
+      <div class="dialog-head"><h3>הוספת עסקה</h3><button type="button" id="closeTransactionDialog">×</button></div>
+      <input id="txAmount" type="number" min="0" step="0.01" placeholder="סכום" required />
+      <input id="txMerchant" placeholder="בית עסק" />
+      <select id="txMember" required></select>
+      <select id="txCategory"><option value="">ללא קטגוריה</option></select>
+      <div class="manual-location-box">
+        <button id="captureTxLocation" class="small-btn secondary-btn" type="button">📍 צרף את מיקום הטלפון</button>
+        <div class="manual-location-status">
+          <span id="txLocationStatus">ללא מיקום</span>
+          <button id="clearTxLocation" class="link-btn hidden" type="button">נקה</button>
+        </div>
+      </div>
+      <button class="primary" type="submit">שמור עסקה</button>
+    </form>
+  </dialog>
+
+  <dialog id="editTransactionDialog">
+    <form id="editTransactionForm" class="dialog-card edit-transaction-form">
+      <div class="dialog-head"><h3>עריכת עסקה</h3><button type="button" id="closeEditTransactionDialog">×</button></div>
+      <label class="field-label">בית עסק<input id="editTxMerchant" placeholder="שם בית העסק" /></label>
+      <label class="field-label">סכום<input id="editTxAmount" type="number" min="0" step="0.01" inputmode="decimal" required /></label>
+      <label class="field-label">בן משפחה<select id="editTxMember" required></select></label>
+      <label class="field-label">קטגוריה<select id="editTxCategory"></select></label>
+      <input id="editTxId" type="hidden" />
+      <div class="dialog-actions">
+        <button id="deleteTransaction" class="mini-btn danger-btn" type="button">מחק עסקה</button>
+        <button class="primary" type="submit">שמור שינויים</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="tokenDialog">
+    <div class="dialog-card">
+      <div class="dialog-head"><h3>Token ל־Shortcut</h3><button type="button" id="closeTokenDialog">×</button></div>
+      <p class="muted">זהו קוד אישי שמאפשר לאייפון שלך לשלוח עסקאות מ־Apple Pay ישירות לחשבון המשפחתי. את הטוקן מדביקים באוטומציה של קיצורי דרך בשדה <strong>x-shortcut-token</strong>. הטוקן מוצג פעם אחת בלבד, לכן מומלץ להעתיק אותו מיד.</p>
+      <textarea id="tokenValue" readonly></textarea>
+      <button id="copyToken" class="primary">📋 העתק Token</button>
+      <p class="endpoint">Endpoint:<br><code>https://ugdaeyfxxcaxloukqqkk.supabase.co/functions/v1/apple-pay</code></p>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=20260925-1435"></script>
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="./app.js?v=73"></script>
+  <script src="./money3.js?v=1"></script>
+</body>
+</html>
