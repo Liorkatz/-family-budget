@@ -26,7 +26,7 @@ function pulse(text,kind){
   if(status)status.textContent=text;
   art.style.filter=kind==='in'?'drop-shadow(0 0 28px rgba(255,211,121,.45)) brightness(1.08)':'drop-shadow(0 22px 30px rgba(0,0,0,.35)) brightness(.90)';
   clearTimeout(pulse.t);
-  pulse.t=setTimeout(()=>{art.style.filter='drop-shadow(0 28px 34px rgba(0,0,0,.32))';if(status)status.textContent='גרור לצדדים • שטרות בתנועה'},900);
+  pulse.t=setTimeout(()=>{art.style.filter='drop-shadow(0 28px 34px rgba(0,0,0,.32))';if(status)status.textContent='גרפיקה חיה • גרור לצדדים'},900);
 }
 
 function sync(){
@@ -76,7 +76,7 @@ function buildSprites(img){
     const d=defs[i%defs.length],el=makeSprite(img,d.r,d.p);
     sprites.push({el,phase:i*.79,speed:.16+(i%4)*.025,rad:.26+(i%5)*.055,y:.18+(i%6)*.095,z:.55+(i%4)*.18,dir:i%2?1:-1});
   }
-  if(status)status.textContent='גרור לצדדים • שטרות בתנועה';
+  if(status)status.textContent='גרפיקה חיה • גרור לצדדים';
 }
 
 function animate(t){
