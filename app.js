@@ -189,6 +189,46 @@ async function importLegacyShortcutTransactions(familyId){
   if(missing.length)await localBulkPut("transactions",missing,{track:false});
 }
 
+async function importCaptureFromHash(){
+  const raw=location.hash.startsWith("#")?location.hash.slice(1):"";
+  if(!raw)return false;
+  const params=new URLSearchParams(raw);
+  if(params.get("capture")!=="1")return false;
+
+  const amount=Number(params.get("amount")||0);
+  if(!Number.isFinite(amount)||amount<=0){
+    history.replaceState(null,"",location.pathname+location.search);
+    toast("לא התקבל סכום תקין מהקיצור");
+    return false;
+  }
+
+  const latRaw=params.get("lat");
+  const lngRaw=params.get("lng");
+  const latitude=latRaw!==null&&latRaw!==""?Number(latRaw):null;
+  const longitude=lngRaw!==null&&lngRaw!==""?Number(lngRaw):null;
+
+  await localPut("transactions",{
+    id:crypto.randomUUID(),
+    family_id:state.family.id,
+    member_id:state.me.id,
+    category_id:null,
+    amount,
+    currency:"ILS",
+    merchant:(params.get("merchant")||"").trim()||null,
+    source:"apple_pay",
+    occurred_at:new Date().toISOString(),
+    created_at:new Date().toISOString(),
+    latitude:Number.isFinite(latitude)?latitude:null,
+    longitude:Number.isFinite(longitude)?longitude:null,
+    location_name:(params.get("place")||"").trim()||null,
+    location_source:Number.isFinite(latitude)&&Number.isFinite(longitude)?"iphone":null
+  });
+
+  history.replaceState(null,"",location.pathname+location.search);
+  toast("ההוצאה נשמרה במכשיר ✓");
+  return true;
+}
+
 async function ensureLocalMigration(familyId){
   const key=`legacy-import:${familyId}:v2`;
   if(await localMetaGet(key))return;
@@ -573,6 +613,7 @@ async function init(){
     await openLocalDb();
     await syncUsage(0);
     await loadAll();
+    if(await importCaptureFromHash()) await loadAll();
   }catch(e){ toast(e.message); show("authView"); }
 }
 
