@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
   <link rel="stylesheet" href="./styles.css?v=200" />
-  <link rel="stylesheet" href="./money-live.css?v=3" />
+  <link rel="stylesheet" href="./money-live.css?v=4" />
 </head>
 <body class="money-live-page">
 <div id="toast" class="toast"></div>
@@ -85,16 +85,23 @@
         <section class="money-live-scene" aria-label="הר הכסף החי">
   <div class="money-live-stage" id="moneyLiveStage">
     <div class="money-live-bg"></div>
-    <img id="moneyLiveArt" class="money-live-art" src="./money-live-scene.jpg" alt="" draggable="false" />
-    <div class="money-live-bills" aria-hidden="true">
-      <img class="money-live-bill bill-a" src="./money-live-scene.jpg" alt="" draggable="false" />
-      <img class="money-live-bill bill-b" src="./money-live-scene.jpg" alt="" draggable="false" />
-      <img class="money-live-bill bill-c" src="./money-live-scene.jpg" alt="" draggable="false" />
-      <img class="money-live-bill bill-d" src="./money-live-scene.jpg" alt="" draggable="false" />
-      <img class="money-live-bill bill-e" src="./money-live-scene.jpg" alt="" draggable="false" />
-      <img class="money-live-bill bill-f" src="./money-live-scene.jpg" alt="" draggable="false" />
+
+    <div id="moneyWindField" class="money-wind-field" aria-hidden="true">
+      <div class="wind-bill bill-200 route-a" style="--delay:-1.0s;--dur:11.8s;--flip:3.9s"><div class="bill-spin"><span class="note-face note-200-front"></span><span class="note-face note-200-back note-back"></span></div></div>
+      <div class="wind-bill bill-100 route-b" style="--delay:-4.6s;--dur:13.2s;--flip:4.4s"><div class="bill-spin"><span class="note-face note-100-front"></span><span class="note-face note-100-back note-back"></span></div></div>
+      <div class="wind-bill bill-200 route-c" style="--delay:-8.2s;--dur:14.6s;--flip:3.6s"><div class="bill-spin"><span class="note-face note-200-front"></span><span class="note-face note-200-back note-back"></span></div></div>
+      <div class="wind-bill bill-100 route-d" style="--delay:-2.7s;--dur:12.4s;--flip:4.1s"><div class="bill-spin"><span class="note-face note-100-front"></span><span class="note-face note-100-back note-back"></span></div></div>
+      <div class="wind-bill bill-200 route-e" style="--delay:-10.1s;--dur:15.4s;--flip:4.8s"><div class="bill-spin"><span class="note-face note-200-front"></span><span class="note-face note-200-back note-back"></span></div></div>
+      <div class="wind-bill bill-100 route-f" style="--delay:-6.4s;--dur:13.8s;--flip:3.7s"><div class="bill-spin"><span class="note-face note-100-front"></span><span class="note-face note-100-back note-back"></span></div></div>
+      <div class="wind-bill bill-100 small route-a" style="--delay:-7.5s;--dur:16.2s;--flip:5.2s"><div class="bill-spin"><span class="note-face note-100-front"></span><span class="note-face note-100-back note-back"></span></div></div>
+      <div class="wind-bill bill-200 small route-b" style="--delay:-11.7s;--dur:14.9s;--flip:4.5s"><div class="bill-spin"><span class="note-face note-200-front"></span><span class="note-face note-200-back note-back"></span></div></div>
+      <div class="wind-bill bill-100 tiny route-c" style="--delay:-3.8s;--dur:18.0s;--flip:5.7s"><div class="bill-spin"><span class="note-face note-100-front"></span><span class="note-face note-100-back note-back"></span></div></div>
+      <div class="wind-bill bill-200 tiny route-d" style="--delay:-13.4s;--dur:17.1s;--flip:5.0s"><div class="bill-spin"><span class="note-face note-200-front"></span><span class="note-face note-200-back note-back"></span></div></div>
+      <div class="wind-bill bill-200 small route-e" style="--delay:-5.2s;--dur:16.7s;--flip:4.3s"><div class="bill-spin"><span class="note-face note-200-front"></span><span class="note-face note-200-back note-back"></span></div></div>
+      <div class="wind-bill bill-100 small route-f" style="--delay:-9.9s;--dur:15.7s;--flip:4.9s"><div class="bill-spin"><span class="note-face note-100-front"></span><span class="note-face note-100-back note-back"></span></div></div>
     </div>
-    <div id="moneyLiveFly" class="money-live-fly" aria-hidden="true"></div>
+
+    <img id="moneyLiveArt" class="money-live-art" src="./money-mountain-base.jpg?v=1" alt="" draggable="false" />
     <div class="money-live-glow"></div>
   </div>
   <div class="money-live-top">
@@ -338,6 +345,6 @@
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script src="./app.js?v=200"></script>
-  <script src="./money-live.js?v=3"></script>
+  <script src="./money-live.js?v=4"></script>
 </body>
 </html>
