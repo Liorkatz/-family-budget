@@ -1,0 +1,29 @@
+body.money-live-page{background:#06111f}
+body.money-live-page #homePage{padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+body.money-live-page #homePage>:not(.money-live-scene){display:none!important}
+.money-live-scene{position:relative;min-height:calc(100svh - 126px);overflow:hidden;border-radius:28px;background:#071523;isolation:isolate;box-shadow:0 24px 70px rgba(0,0,0,.36)}
+.money-live-stage{position:absolute;inset:0;overflow:hidden;perspective:1200px;touch-action:none;cursor:grab}
+.money-live-stage:active{cursor:grabbing}
+.money-live-bg{position:absolute;inset:-3%;background:linear-gradient(180deg,rgba(3,12,25,.05),rgba(4,13,25,.18) 54%,rgba(2,8,15,.48)),url('./money-bg-blue.jpg') center/cover no-repeat;transform:scale(1.04);filter:saturate(1.08)}
+.money-live-art{position:absolute;left:50%;top:54%;width:min(1500px,150vw);max-width:none;transform:translate(-50%,-50%) perspective(1200px) rotateY(var(--live-yaw,0deg)) rotateX(var(--live-pitch,0deg)) scale(var(--live-scale,.93));transform-origin:50% 66%;transition:filter .45s ease;will-change:transform;user-select:none;pointer-events:none;filter:drop-shadow(0 28px 34px rgba(0,0,0,.32))}
+.money-live-fly{position:absolute;inset:0;z-index:4;pointer-events:none;transform-style:preserve-3d}
+.money-live-note{position:absolute;left:0;top:0;transform-origin:center;will-change:transform,opacity,filter;filter:drop-shadow(0 12px 16px rgba(0,0,0,.26))}
+.money-live-glow{position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(circle at 70% 24%,rgba(116,190,255,.16),transparent 28%),radial-gradient(circle at 54% 70%,rgba(255,203,104,.11),transparent 34%)}
+.money-live-top{position:absolute;z-index:10;top:18px;right:18px;left:18px;display:flex;justify-content:space-between;align-items:flex-start;direction:rtl;color:#fff;pointer-events:none;text-shadow:0 2px 15px rgba(0,0,0,.48)}
+.money-live-top>div{pointer-events:none}
+.money-live-kicker{font:800 10px/1 Heebo,sans-serif;letter-spacing:.18em;color:#b9d8e8}
+.money-live-top h2{margin:5px 0 0;font:900 clamp(27px,6vw,40px)/1 Heebo,sans-serif;letter-spacing:-.04em}
+.money-live-top p{margin:8px 0 0;font:500 12px Heebo,sans-serif;color:rgba(245,250,255,.75)}
+.money-live-back{pointer-events:auto;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.18);background:rgba(4,16,29,.48);backdrop-filter:blur(15px);border-radius:999px;padding:9px 14px;font:700 12px Heebo,sans-serif}
+.money-live-balance{position:absolute;z-index:10;left:50%;bottom:108px;transform:translateX(-50%);min-width:176px;text-align:center;color:#fff;background:rgba(5,16,27,.58);border:1px solid rgba(255,255,255,.16);border-radius:20px;padding:9px 18px 10px;backdrop-filter:blur(18px);box-shadow:0 14px 34px rgba(0,0,0,.28);direction:rtl}
+.money-live-balance small{display:block;color:rgba(238,247,252,.68);font:600 11px Heebo,sans-serif}
+.money-live-balance strong{display:block;margin-top:2px;font:900 28px/1.1 Heebo,sans-serif;letter-spacing:-.03em}
+.money-live-controls{position:absolute;z-index:11;left:50%;bottom:24px;transform:translateX(-50%);display:flex;align-items:center;gap:11px;color:#fff;background:rgba(4,16,28,.68);border:1px solid rgba(255,255,255,.15);border-radius:999px;padding:6px 7px 6px 14px;backdrop-filter:blur(18px);box-shadow:0 14px 36px rgba(0,0,0,.31);direction:ltr}
+.money-live-controls button{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font:400 30px/1 system-ui;box-shadow:inset 0 0 0 1px rgba(255,255,255,.11)}
+.money-live-controls button:active{transform:scale(.91)}
+.money-live-controls div{text-align:center;min-width:92px;direction:rtl}
+.money-live-controls span{display:block;font:700 12px Heebo,sans-serif}
+.money-live-controls small{display:block;font:500 9px Heebo,sans-serif;color:rgba(255,255,255,.52)}
+.money-live-status{position:absolute;z-index:10;left:50%;bottom:86px;transform:translateX(-50%);font:600 10px Heebo,sans-serif;color:rgba(255,255,255,.62);white-space:nowrap;direction:rtl;text-shadow:0 2px 10px #000}
+@media(max-width:600px){.money-live-scene{min-height:calc(100svh - 126px);border-radius:22px}.money-live-art{width:205vw;top:53%}.money-live-top{top:14px;right:13px;left:13px}.money-live-balance{bottom:104px}}
+@media(prefers-reduced-motion:reduce){.money-live-note{display:none}.money-live-art{transition:none!important}}
