@@ -180,6 +180,15 @@ function queueUsageAction(count=1){
   },1800);
 }
 
+async function importLegacyShortcutTransactions(familyId){
+  const {data,error}=await sb.from("transactions").select("*").eq("family_id",familyId);
+  if(error)throw error;
+  const existing=await localList("transactions",familyId);
+  const ids=new Set(existing.map(x=>x.id));
+  const missing=(data||[]).filter(x=>!ids.has(x.id));
+  if(missing.length)await localBulkPut("transactions",missing,{track:false});
+}
+
 async function ensureLocalMigration(familyId){
   const key=`legacy-import:${familyId}:v2`;
   if(await localMetaGet(key))return;
@@ -664,6 +673,7 @@ async function loadAll(){
   if(members.error)throw members.error;
 
   await ensureLocalMigration(f);
+  await importLegacyShortcutTransactions(f);
 
   const [cats,txsAll,incomesAll,fixedAll,budgetsAll]=await Promise.all([
     localList("categories",f),
