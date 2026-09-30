@@ -162,8 +162,8 @@ body.money-live-page #homePage>:not(.money-live-scene){display:none!important}
   position:absolute;
   z-index:3;
   left:50%;
-  top:55%;
-  width:min(1500px,150vw);
+  top:62%;
+  width:min(1280px,124vw);
   max-width:none;
   transform:
     translate(-50%,-50%)
@@ -281,7 +281,7 @@ body.money-live-page #homePage>:not(.money-live-scene){display:none!important}
 
 @media(max-width:600px){
   .money-live-scene{min-height:calc(100svh - 126px);border-radius:22px}
-  .money-live-art{width:205vw;top:54%}
+  .money-live-art{width:138vw;top:63%}
   .money-live-top{top:14px;right:13px;left:13px}
   .money-live-balance{bottom:104px}
   .wind-bill{width:150px;height:71px}
@@ -303,4 +303,16 @@ body.money-live-page #homePage>:not(.money-live-scene){display:none!important}
   .tiny .note-200-back{background-size:207.486px 450.936px;background-position:-105.101px -150.153px}
   .tiny .note-100-front{background-size:214.785px 466.823px;background-position:-10.937px -205.063px}
   .tiny .note-100-back{background-size:209.481px 454.815px;background-position:-106.667px -200px}
+}
+/* Composition fix: keep the mountain low enough so the flying notes stay visible */
+@media(min-width:601px){
+  .money-live-art{width:min(1280px,124vw);top:62%}
+}
+@media(max-width:600px){
+  .money-live-art{width:138vw!important;top:63%!important}
+  .money-wind-field{inset:1% 0 12%}
+  .money-live-top{z-index:20}
+  .money-live-balance{z-index:20}
+  .money-live-controls{z-index:21}
+  .money-live-status{z-index:20}
 }
