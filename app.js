@@ -43,7 +43,7 @@ let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.1";
+const APP_VERSION="2.0.2";
 const LOCAL_DB_NAME="family-budget-local-v2";
 const LOCAL_DB_VERSION=1;
 const LOCAL_STORES=["transactions","incomes","fixed_expenses","categories","budgets","meta"];
@@ -622,6 +622,54 @@ $("toggleAuthMode").onclick=()=>{
   $("toggleAuthMode").textContent=authMode==="login"?"אין חשבון? צור חשבון":"כבר יש חשבון? כניסה";
 };
 
+$("forgotPassword").onclick=async()=>{
+  const email=$("authEmail").value.trim().toLowerCase();
+  if(!email){
+    $("authEmail").focus();
+    return toast("הכנס אימייל ואז לחץ שכחתי סיסמה");
+  }
+  $("forgotPassword").disabled=true;
+  try{
+    const redirectTo=location.origin+location.pathname;
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
+    if(error){
+      toast(error.message||"לא ניתן לשלוח מייל איפוס");
+      return;
+    }
+    toast("נשלח מייל לאיפוס הסיסמה ✓");
+  }finally{
+    $("forgotPassword").disabled=false;
+  }
+};
+
+$("closePasswordRecoveryDialog").onclick=()=>$("passwordRecoveryDialog").close();
+
+$("passwordRecoveryForm").onsubmit=async(e)=>{
+  e.preventDefault();
+  const password=$("recoveryPassword").value;
+  const confirmPassword=$("recoveryPasswordConfirm").value;
+  const submit=$("passwordRecoveryForm").querySelector('button[type="submit"]');
+
+  if(password.length<6)return toast("הסיסמה חייבת להכיל לפחות 6 תווים");
+  if(password!==confirmPassword)return toast("הסיסמאות אינן זהות");
+
+  submit.disabled=true;
+  try{
+    const {error}=await sb.auth.updateUser({password});
+    if(error){
+      toast(error.message||"לא ניתן לעדכן את הסיסמה");
+      return;
+    }
+    $("passwordRecoveryForm").reset();
+    $("passwordRecoveryDialog").close();
+    await sb.auth.signOut();
+    show("authView");
+    toast("הסיסמה עודכנה ✓ אפשר להיכנס");
+  }finally{
+    submit.disabled=false;
+  }
+};
+
 $("authForm").onsubmit=async(e)=>{
   e.preventDefault();
   const email=$("authEmail").value.trim().toLowerCase(), password=$("authPassword").value;
@@ -885,10 +933,12 @@ window.editIncome=async(id)=>{
   const description=prompt("תיאור ההכנסה",item.description); if(description===null)return;
   const value=prompt("סכום חודשי",String(item.amount)); if(value===null)return;
   const amount=Number(value); if(!description.trim()||!Number.isFinite(amount)||amount<0)return toast("פרטים לא תקינים");
-  const {error}=await sb.from("incomes").update({description:description.trim(),amount}).eq("id",id);\n  if(error)return toast(error.message);
+  const {error}=await sb.from("incomes").update({description:description.trim(),amount}).eq("id",id);
+  if(error)return toast(error.message);
   await loadAll();
   toast("ההכנסה עודכנה",async()=>{
-    const {error}=await sb.from("incomes").update(previous).eq("id",id);\n    if(error)throw error;
+    const {error}=await sb.from("incomes").update(previous).eq("id",id);
+    if(error)throw error;
     await loadAll();
   });
 };
@@ -896,10 +946,12 @@ window.deleteIncome=async(id)=>{
   const item=state.incomes.find(x=>x.id===id); if(!item)return;
   if(!confirm(`למחוק את ההכנסה "${item.description}"?`))return;
   const restore={...item};
-  const {error}=await sb.from("incomes").delete().eq("id",id);\n  if(error)return toast(error.message);
+  const {error}=await sb.from("incomes").delete().eq("id",id);
+  if(error)return toast(error.message);
   await loadAll();
   toast("ההכנסה נמחקה",async()=>{
-    const {error}=await sb.from("incomes").insert(restore);\n    if(error)throw error;
+    const {error}=await sb.from("incomes").insert(restore);
+    if(error)throw error;
     await loadAll();
   });
 };
@@ -956,11 +1008,13 @@ window.setBudget=async(categoryId)=>{
   const existing=state.budgets.find(b=>b.category_id===categoryId);
   if(existing){
     const previous=Number(existing.monthly_limit);
-    const {error}=await sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id);\n    if(error)return toast(error.message);
+    const {error}=await sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id);
+    if(error)return toast(error.message);
     await loadAll();
     toast("התקציב עודכן",async()=>{const {error}=await sb.from("budgets").update({monthly_limit:previous}).eq("id",existing.id);if(error)throw error;await loadAll();});
   }else{
-    const {data,error}=await sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount}).select("id").single();\n    if(error)return toast(error.message);
+    const {data,error}=await sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount}).select("id").single();
+    if(error)return toast(error.message);
     await loadAll();
     toast("התקציב נוסף",async()=>{const {error}=await sb.from("budgets").delete().eq("id",data.id);if(error)throw error;await loadAll();});
   }
@@ -1050,7 +1104,8 @@ $("testTransaction").onclick=async()=>{
     });
   }
   try{
-    const {error}=await sb.from("transactions").insert(rows);\n    if(error){toast(error.message);return;}
+    const {error}=await sb.from("transactions").insert(rows);
+    if(error){toast(error.message);return;}
     toast("נוספו 12 עסקאות בדיקה: 8 עם מיקום ו־4 בלי");
     await loadAll();
   }finally{
@@ -1102,11 +1157,13 @@ $("editTransactionForm").onsubmit=async(e)=>{
     member_id:$("editTxMember").value,
     category_id:$("editTxCategory").value||null
   };
-  const {error}=await sb.from("transactions").update(payload).eq("id",id);\n  if(error)return toast(error.message);
+  const {error}=await sb.from("transactions").update(payload).eq("id",id);
+  if(error)return toast(error.message);
   $("editTransactionDialog").close();
   await loadAll();
   toast("העסקה עודכנה",async()=>{
-    const {error}=await sb.from("transactions").update(previous).eq("id",id);\n    if(error)throw error;
+    const {error}=await sb.from("transactions").update(previous).eq("id",id);
+    if(error)throw error;
     await loadAll();
   });
 };
@@ -1131,11 +1188,13 @@ $("deleteTransaction").onclick=async()=>{
     location_name:current.location_name??null,
     location_source:current.location_source??null
   };
-  const {error}=await sb.from("transactions").delete().eq("id",id);\n  if(error)return toast(error.message);
+  const {error}=await sb.from("transactions").delete().eq("id",id);
+  if(error)return toast(error.message);
   $("editTransactionDialog").close();
   await loadAll();
   toast("העסקה נמחקה",async()=>{
-    const {error}=await sb.from("transactions").insert(restore);\n    if(error)throw error;
+    const {error}=await sb.from("transactions").insert(restore);
+    if(error)throw error;
     await loadAll();
   });
 };
@@ -1260,7 +1319,8 @@ $("transactionForm").onsubmit=async(e)=>{
     longitude:manualTransactionLocation?.longitude??null,
     location_source:manualTransactionLocation?"manual":null
   };
-  const {error}=await sb.from("transactions").insert(payload);\n  if(error)return toast(error.message);
+  const {error}=await sb.from("transactions").insert(payload);
+  if(error)return toast(error.message);
   $("transactionDialog").close();
   e.target.reset();
   manualTransactionLocation=null;
@@ -1269,6 +1329,14 @@ $("transactionForm").onsubmit=async(e)=>{
 };
 
 sb.auth.onAuthStateChange((event)=>{
+  if(event==="PASSWORD_RECOVERY"){
+    show("authView");
+    setTimeout(()=>{
+      if(!$("passwordRecoveryDialog").open)$("passwordRecoveryDialog").showModal();
+      $("recoveryPassword").focus();
+    },0);
+    return;
+  }
   if(event==="SIGNED_OUT") show("authView");
 });
 
