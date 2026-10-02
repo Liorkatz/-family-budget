@@ -613,7 +613,6 @@ async function init(){
     await openLocalDb();
     await syncUsage(0);
     await loadAll();
-    if(await importCaptureFromHash()) await loadAll();
   }catch(e){ toast(e.message); show("authView"); }
 }
 
@@ -710,37 +709,21 @@ document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.onclick=()=>{
 
 async function loadAll(){
   const f=state.family.id;
-  const members=await sb.from("members").select("*").eq("family_id",f).order("created_at");
-  if(members.error)throw members.error;
-
-  await ensureLocalMigration(f);
-  await importLegacyShortcutTransactions(f);
-
-  const [cats,txsAll,incomesAll,fixedAll,budgetsAll]=await Promise.all([
-    localList("categories",f),
-    localList("transactions",f),
-    localList("incomes",f),
-    localList("fixed_expenses",f),
-    localList("budgets",f)
+  const [members,cats,txs,incomes,fixed,budgets]=await Promise.all([
+    sb.from("members").select("*").eq("family_id",f).order("created_at"),
+    sb.from("categories").select("*").eq("family_id",f).order("name"),
+    sb.from("transactions").select("*,members(name),categories(name)").eq("family_id",f).gte("occurred_at",monthStart()).lt("occurred_at",monthEnd()).order("created_at",{ascending:false}).order("occurred_at",{ascending:false}),
+    sb.from("incomes").select("*").eq("family_id",f).eq("active",true).order("created_at"),
+    sb.from("fixed_expenses").select("*,categories(name)").eq("family_id",f).eq("active",true).order("display_order",{ascending:true}).order("created_at",{ascending:true}),
+    sb.from("budgets").select("*,categories(name)").eq("family_id",f)
   ]);
-
-  const start=new Date(monthStart()).getTime();
-  const end=new Date(monthEnd()).getTime();
-  const memberById=Object.fromEntries((members.data||[]).map(m=>[m.id,m]));
-  const categoryById=Object.fromEntries(cats.map(c=>[c.id,c]));
-
+  for(const r of [members,cats,txs,incomes,fixed,budgets]) if(r.error) throw r.error;
   state.members=members.data||[];
-  state.categories=cats.slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"he"));
-  state.transactions=txsAll
-    .filter(t=>{const time=new Date(t.occurred_at||t.created_at||0).getTime();return time>=start&&time<end;})
-    .map(t=>({...t,members:memberById[t.member_id]?{name:memberById[t.member_id].name}:null,categories:categoryById[t.category_id]?{name:categoryById[t.category_id].name}:null}))
-    .sort((a,b)=>new Date(b.created_at||b.occurred_at)-new Date(a.created_at||a.occurred_at));
-  state.incomes=incomesAll.filter(x=>x.active!==false).sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
-  state.fixed=fixedAll
-    .filter(x=>x.active!==false)
-    .map(x=>({...x,categories:categoryById[x.category_id]?{name:categoryById[x.category_id].name}:null}))
-    .sort((a,b)=>(Number(a.display_order)||0)-(Number(b.display_order)||0)||new Date(a.created_at||0)-new Date(b.created_at||0));
-  state.budgets=budgetsAll.map(x=>({...x,categories:categoryById[x.category_id]?{name:categoryById[x.category_id].name}:null}));
+  state.categories=cats.data||[];
+  state.transactions=txs.data||[];
+  state.incomes=incomes.data||[];
+  state.fixed=fixed.data||[];
+  state.budgets=budgets.data||[];
 
   if(state.me?.role==="admin"){
     const {data,error}=await sb.functions.invoke("manage-family",{body:{action:"info"}});
@@ -894,7 +877,7 @@ function render(){
   if($("analysisPage")?.classList.contains("active"))setTimeout(renderPurchaseMap,80);
 }
 
-$("incomeForm").onsubmit=async(e)=>{e.preventDefault();await localPut("incomes",{family_id:state.family.id,member_id:state.me?.id||null,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly",active:true,created_at:new Date().toISOString()});e.target.reset();await loadAll();};
+$("incomeForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("incomes").insert({family_id:state.family.id,member_id:state.me?.id||null,description:$("incomeDesc").value,amount:Number($("incomeValue").value),frequency:"monthly"});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
 window.editIncome=async(id)=>{
   const item=state.incomes.find(x=>x.id===id); if(!item)return;
@@ -902,10 +885,10 @@ window.editIncome=async(id)=>{
   const description=prompt("תיאור ההכנסה",item.description); if(description===null)return;
   const value=prompt("סכום חודשי",String(item.amount)); if(value===null)return;
   const amount=Number(value); if(!description.trim()||!Number.isFinite(amount)||amount<0)return toast("פרטים לא תקינים");
-  await localPatch("incomes",id,{description:description.trim(),amount});
+  const {error}=await sb.from("incomes").update({description:description.trim(),amount}).eq("id",id);\n  if(error)return toast(error.message);
   await loadAll();
   toast("ההכנסה עודכנה",async()=>{
-    await localPatch("incomes",id,previous);
+    const {error}=await sb.from("incomes").update(previous).eq("id",id);\n    if(error)throw error;
     await loadAll();
   });
 };
@@ -913,10 +896,10 @@ window.deleteIncome=async(id)=>{
   const item=state.incomes.find(x=>x.id===id); if(!item)return;
   if(!confirm(`למחוק את ההכנסה "${item.description}"?`))return;
   const restore={...item};
-  await localDelete("incomes",id);
+  const {error}=await sb.from("incomes").delete().eq("id",id);\n  if(error)return toast(error.message);
   await loadAll();
   toast("ההכנסה נמחקה",async()=>{
-    await localPut("incomes",restore);
+    const {error}=await sb.from("incomes").insert(restore);\n    if(error)throw error;
     await loadAll();
   });
 };
@@ -962,9 +945,9 @@ function renderFixedList(filterText=""){
   $("fixedList").innerHTML=rows.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||(q?'<div class="empty-state">לא נמצאו סעיפים תואמים</div>':'<div class="empty-state">אין הוצאות קבועות</div>');
 }
 $("fixedDesc").oninput=()=>renderFixedList($("fixedDesc").value);
-$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;await localPut("fixed_expenses",{family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",active:true,display_order:nextOrder,created_at:new Date().toISOString()});e.target.reset();await loadAll();};
-window.saveFixed=async(id)=>{const item=state.fixed.find(x=>x.id===id);if(!item)return;const previous=Number(item.amount);const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");await localPatch("fixed_expenses",id,{amount});await loadAll();toast("ההוצאה עודכנה",async()=>{await localPatch("fixed_expenses",id,{amount:previous});await loadAll();});};
-$("categoryForm").onsubmit=async(e)=>{e.preventDefault();await localPut("categories",{family_id:state.family.id,name:$("categoryName").value.trim(),created_at:new Date().toISOString()});e.target.reset();await loadAll();};
+$("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
+window.saveFixed=async(id)=>{const item=state.fixed.find(x=>x.id===id);if(!item)return;const previous=Number(item.amount);const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);await loadAll();toast("ההוצאה עודכנה",async()=>{const {error}=await sb.from("fixed_expenses").update({amount:previous}).eq("id",id);if(error)throw error;await loadAll();});};
+$("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
 window.setBudget=async(categoryId)=>{
   const category=state.categories.find(x=>x.id===categoryId); if(!category)return;
@@ -973,13 +956,13 @@ window.setBudget=async(categoryId)=>{
   const existing=state.budgets.find(b=>b.category_id===categoryId);
   if(existing){
     const previous=Number(existing.monthly_limit);
-    await localPatch("budgets",existing.id,{monthly_limit:amount});
+    const {error}=await sb.from("budgets").update({monthly_limit:amount}).eq("id",existing.id);\n    if(error)return toast(error.message);
     await loadAll();
-    toast("התקציב עודכן",async()=>{await localPatch("budgets",existing.id,{monthly_limit:previous});await loadAll();});
+    toast("התקציב עודכן",async()=>{const {error}=await sb.from("budgets").update({monthly_limit:previous}).eq("id",existing.id);if(error)throw error;await loadAll();});
   }else{
-    const data=await localPut("budgets",{family_id:state.family.id,category_id:categoryId,monthly_limit:amount,created_at:new Date().toISOString()});
+    const {data,error}=await sb.from("budgets").insert({family_id:state.family.id,category_id:categoryId,monthly_limit:amount}).select("id").single();\n    if(error)return toast(error.message);
     await loadAll();
-    toast("התקציב נוסף",async()=>{await localDelete("budgets",data.id);await loadAll();});
+    toast("התקציב נוסף",async()=>{const {error}=await sb.from("budgets").delete().eq("id",data.id);if(error)throw error;await loadAll();});
   }
 };
 
@@ -1067,7 +1050,7 @@ $("testTransaction").onclick=async()=>{
     });
   }
   try{
-    await localBulkPut("transactions",rows,{track:true});
+    const {error}=await sb.from("transactions").insert(rows);\n    if(error){toast(error.message);return;}
     toast("נוספו 12 עסקאות בדיקה: 8 עם מיקום ו־4 בלי");
     await loadAll();
   }finally{
@@ -1119,11 +1102,11 @@ $("editTransactionForm").onsubmit=async(e)=>{
     member_id:$("editTxMember").value,
     category_id:$("editTxCategory").value||null
   };
-  await localPatch("transactions",id,payload);
+  const {error}=await sb.from("transactions").update(payload).eq("id",id);\n  if(error)return toast(error.message);
   $("editTransactionDialog").close();
   await loadAll();
   toast("העסקה עודכנה",async()=>{
-    await localPatch("transactions",id,previous);
+    const {error}=await sb.from("transactions").update(previous).eq("id",id);\n    if(error)throw error;
     await loadAll();
   });
 };
@@ -1148,11 +1131,11 @@ $("deleteTransaction").onclick=async()=>{
     location_name:current.location_name??null,
     location_source:current.location_source??null
   };
-  await localDelete("transactions",id);
+  const {error}=await sb.from("transactions").delete().eq("id",id);\n  if(error)return toast(error.message);
   $("editTransactionDialog").close();
   await loadAll();
   toast("העסקה נמחקה",async()=>{
-    await localPut("transactions",restore);
+    const {error}=await sb.from("transactions").insert(restore);\n    if(error)throw error;
     await loadAll();
   });
 };
@@ -1277,7 +1260,7 @@ $("transactionForm").onsubmit=async(e)=>{
     longitude:manualTransactionLocation?.longitude??null,
     location_source:manualTransactionLocation?"manual":null
   };
-  await localPut("transactions",{...payload,id:crypto.randomUUID(),currency:"ILS",occurred_at:new Date().toISOString(),created_at:new Date().toISOString()});
+  const {error}=await sb.from("transactions").insert(payload);\n  if(error)return toast(error.message);
   $("transactionDialog").close();
   e.target.reset();
   manualTransactionLocation=null;
