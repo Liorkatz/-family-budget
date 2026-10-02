@@ -43,7 +43,7 @@ let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.0";
+const APP_VERSION="2.0.1";
 const LOCAL_DB_NAME="family-budget-local-v2";
 const LOCAL_DB_VERSION=1;
 const LOCAL_STORES=["transactions","incomes","fixed_expenses","categories","budgets","meta"];
