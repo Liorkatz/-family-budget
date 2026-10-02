@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=200" />
+  <link rel="stylesheet" href="./styles.css?v=203" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -31,8 +31,11 @@
         <input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="סיסמה" required />
         <button class="primary" type="submit">כניסה</button>
       </form>
+      <div class="or-divider"><span>או</span></div>
+      <button id="googleAuth" class="primary secondary" type="button">המשך עם Google</button>
       <button id="toggleAuthMode" class="link-btn" type="button">אין חשבון? צור חשבון</button>
       <button id="forgotPassword" class="link-btn" type="button">שכחתי סיסמה</button>
+      <div class="login-version" aria-label="גרסת אפליקציה">v2.0.3</div>
     </section>
 
     <section id="bootstrapView" class="auth-card hidden">
@@ -76,7 +79,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.2</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.3</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -312,6 +315,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=202"></script>
+  <script src="./app.js?v=203"></script>
 </body>
 </html>
