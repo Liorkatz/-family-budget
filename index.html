@@ -32,6 +32,7 @@
         <button class="primary" type="submit">כניסה</button>
       </form>
       <button id="toggleAuthMode" class="link-btn" type="button">אין חשבון? צור חשבון</button>
+      <button id="forgotPassword" class="link-btn" type="button">שכחתי סיסמה</button>
     </section>
 
     <section id="bootstrapView" class="auth-card hidden">
@@ -75,7 +76,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.1</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.2</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -176,8 +177,8 @@
           <div class="privacy-hero">
             <span class="privacy-lock">🔒</span>
             <div>
-              <strong>המידע הכספי נשמר במכשיר הזה</strong>
-              <p>מגרסה 2.0 עסקאות, הכנסות, קטגוריות, תקציבים, הוצאות קבועות ומיקומים נשמרים מקומית במכשיר.</p>
+              <strong>המידע המשפחתי מסונכרן דרך השרת</strong>
+              <p>עסקאות, הכנסות, קטגוריות, תקציבים, הוצאות קבועות ומיקומים נשמרים ב־Supabase כדי שכל בני המשפחה יראו את אותו מידע.</p>
             </div>
           </div>
           <div class="privacy-grid">
@@ -190,8 +191,7 @@
             <div><span>קטגוריות ותקציבים</span><strong>שרת משפחתי</strong></div>
             <div><span>סטטיסטיקת שימוש</span><strong>מונה בלבד</strong></div>
           </div>
-          <p class="privacy-note">השרת מקבל רק זמן שימוש אחרון, גרסת אפליקציה ומספר פעולות מצטבר — ללא סכומים, קטגוריות, מיקומים או תוכן העסקאות.</p>
-          <p class="privacy-legacy">נתוני עבר נשארים זמנית בשרת לצורך מעבר בטוח של כל מכשירי המשפחה לגרסה 2.0. קיצור Apple Pay הישן עדיין שולח עסקאות לשרת עד שנחליף אותו לקיצור מקומי; גרסה 2.0 מייבאת אותן למכשיר אוטומטית. לאחר מעבר כל המכשירים והקיצור ניתן למחוק את נתוני ה־Legacy.</p>
+          <p class="privacy-note">הגישה לנתוני המשפחה מוגנת באמצעות חשבון המשתמש והרשאות המשפחה. קיצור Apple Pay שולח עסקאות באמצעות Token אישי של בן המשפחה.</p>
         </details>
 
         <details id="familyAdminCard" class="settings-card" open>
@@ -288,6 +288,16 @@
     </form>
   </dialog>
 
+  <dialog id="passwordRecoveryDialog">
+    <form id="passwordRecoveryForm" class="dialog-card">
+      <div class="dialog-head"><h3>הגדרת סיסמה חדשה</h3><button type="button" id="closePasswordRecoveryDialog">×</button></div>
+      <p class="muted">הכנס סיסמה חדשה לחשבון.</p>
+      <input id="recoveryPassword" type="password" autocomplete="new-password" minlength="6" placeholder="סיסמה חדשה" required />
+      <input id="recoveryPasswordConfirm" type="password" autocomplete="new-password" minlength="6" placeholder="אימות סיסמה" required />
+      <button class="primary" type="submit">שמור סיסמה חדשה</button>
+    </form>
+  </dialog>
+
   <dialog id="tokenDialog">
     <div class="dialog-card">
       <div class="dialog-head"><h3>Token ל־Shortcut</h3><button type="button" id="closeTokenDialog">×</button></div>
@@ -302,6 +312,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=201"></script>
+  <script src="./app.js?v=202"></script>
 </body>
 </html>
