@@ -44,7 +44,7 @@ let homePieMode = "categories";
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.7";
+const APP_VERSION="2.0.8";
 const LOCAL_DB_NAME="family-budget-local-v2";
 const LOCAL_DB_VERSION=1;
 const LOCAL_STORES=["transactions","incomes","fixed_expenses","categories","budgets","meta"];
@@ -999,7 +999,7 @@ function render(){
 
   renderCategoryPie();
 
-  const txHtml=(arr)=>arr.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><span class="tx-category-icon">${txCategoryIcon(t.categories?.name)}</span><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.categories?.name||"ללא קטגוריה")} · ${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")}${t.latitude!=null&&t.longitude!=null?" · 📍":""}</small></div></div>`).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
+  const txHtml=(arr)=>arr.map(t=>transactionSwipeRow(t,`<span class="tx-category-icon">${txCategoryIcon(t.categories?.name)}</span><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.categories?.name||"ללא קטגוריה")} · ${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")}${t.latitude!=null&&t.longitude!=null?" · 📍":""}</small></div>`)).join("")||'<div class="empty-state">אין עדיין עסקאות</div>';
   $("recentTransactions").innerHTML=txHtml(state.transactions.slice(0,5));
   bindTransactionLongPress($("recentTransactions"));
   renderTransactionSearch();
@@ -1288,10 +1288,12 @@ $("editTransactionForm").onsubmit=async(e)=>{
   });
 };
 
-$("deleteTransaction").onclick=async()=>{
-  const id=$("editTxId").value;
-  const current=state.transactions.find(x=>x.id===id); if(!current)return;
-  if(!confirm("למחוק את העסקה?"))return;
+const deletingTransactionIds=new Set();
+async function deleteTransactionById(id){
+  const current=state.transactions.find(x=>x.id===id);
+  if(!current||deletingTransactionIds.has(id))return;
+  if(!confirm(`למחוק את העסקה "${current.merchant||"עסקה"}" בסך ${money(current.amount)}?`))return;
+  deletingTransactionIds.add(id);
   const restore={
     id:current.id,
     family_id:current.family_id,
@@ -1308,45 +1310,132 @@ $("deleteTransaction").onclick=async()=>{
     location_name:current.location_name??null,
     location_source:current.location_source??null
   };
-  const {error}=await sb.from("transactions").delete().eq("id",id);
-  if(error)return toast(error.message);
-  $("editTransactionDialog").close();
-  await loadAll();
-  toast("העסקה נמחקה",async()=>{
-    const {error}=await sb.from("transactions").insert(restore);
+  try{
+    const {error}=await sb.from("transactions").delete().eq("id",id);
     if(error)throw error;
+    if($("editTransactionDialog").open)$("editTransactionDialog").close();
     await loadAll();
+    toast("העסקה נמחקה",async()=>{
+      const {error}=await sb.from("transactions").insert(restore);
+      if(error)throw error;
+      await loadAll();
+    });
+  }catch(err){
+    toast(err?.message||"לא ניתן למחוק את העסקה");
+  }finally{
+    deletingTransactionIds.delete(id);
+  }
+}
+$("deleteTransaction").onclick=()=>deleteTransactionById($("editTxId").value);
+
+const SWIPE_ACTION_WIDTH=86;
+let openTransactionSwipe=null;
+
+function setTransactionSwipe(row,direction=null){
+  if(!row)return;
+  const content=row.querySelector(".tx-swipe-content");
+  if(!content)return;
+  if(direction&&openTransactionSwipe&&openTransactionSwipe!==row){
+    setTransactionSwipe(openTransactionSwipe);
+  }
+  row.classList.toggle("swiped-left",direction==="left");
+  row.classList.toggle("swiped-right",direction==="right");
+  row.classList.remove("swipe-dragging");
+  content.style.transition="";
+  content.style.transform=direction===null?"":`translate3d(${direction==="left"?-SWIPE_ACTION_WIDTH:SWIPE_ACTION_WIDTH}px,0,0)`;
+  row.querySelectorAll(".tx-swipe-delete").forEach(button=>{
+    const enabled=direction!==null&&button.classList.contains("tx-swipe-delete--"+direction);
+    button.tabIndex=enabled?0:-1;
+    button.setAttribute("aria-hidden",enabled?"false":"true");
   });
-};
+  if(direction)openTransactionSwipe=row;
+  else if(openTransactionSwipe===row)openTransactionSwipe=null;
+}
+
+function transactionSwipeRow(t,content){
+  const name=escapeHtml(t.merchant||"עסקה");
+  return `<div class="transaction-row transaction-editable tx-swipe-row" data-tx-id="${escapeHtml(t.id)}">
+    <button type="button" class="tx-swipe-delete tx-swipe-delete--left" tabindex="-1" aria-hidden="true" aria-label="מחק עסקה: ${name}">מחק</button>
+    <button type="button" class="tx-swipe-delete tx-swipe-delete--right" tabindex="-1" aria-hidden="true" aria-label="מחק עסקה: ${name}">מחק</button>
+    <div class="tx-swipe-content">${content}</div>
+  </div>`;
+}
 
 function bindTransactionLongPress(container){
   if(!container)return;
-  container.querySelectorAll(".transaction-editable").forEach(row=>{
-    let timer=null, moved=false;
-    const start=()=>{
-      moved=false;
+  if(openTransactionSwipe&&!openTransactionSwipe.isConnected)openTransactionSwipe=null;
+  container.querySelectorAll(".tx-swipe-row").forEach(row=>{
+    const content=row.querySelector(".tx-swipe-content");
+    let timer=null,tracking=false,axis=null,startX=0,startY=0,startOffset=0,currentOffset=0;
+    const stopTimer=()=>{
+      if(timer!==null){clearTimeout(timer);timer=null;}
+      row.classList.remove("holding");
+    };
+    content.addEventListener("pointerdown",e=>{
+      if(e.pointerType==="mouse"&&e.button!==0)return;
+      if(openTransactionSwipe&&openTransactionSwipe!==row)setTransactionSwipe(openTransactionSwipe);
+      startX=e.clientX;startY=e.clientY;
+      startOffset=row.classList.contains("swiped-left")?-SWIPE_ACTION_WIDTH:row.classList.contains("swiped-right")?SWIPE_ACTION_WIDTH:0;
+      currentOffset=startOffset;
+      axis=null;tracking=true;
+      row.classList.add("holding");
+      stopTimer();
       row.classList.add("holding");
       timer=setTimeout(()=>{
         timer=null;
+        if(!tracking||axis)return;
+        tracking=false;
         row.classList.remove("holding");
-        if(!moved) editTransaction(row.dataset.txId);
+        setTransactionSwipe(row);
+        editTransaction(row.dataset.txId);
       },650);
-    };
-    const cancel=()=>{
-      if(timer){clearTimeout(timer);timer=null;}
-      row.classList.remove("holding");
-    };
-    row.addEventListener("touchstart",start,{passive:true});
-    row.addEventListener("touchmove",()=>{moved=true;cancel();},{passive:true});
-    row.addEventListener("touchend",cancel,{passive:true});
-    row.addEventListener("touchcancel",cancel,{passive:true});
-    row.addEventListener("mousedown",start);
-    row.addEventListener("mousemove",()=>{moved=true;cancel();});
-    row.addEventListener("mouseup",cancel);
-    row.addEventListener("mouseleave",cancel);
+      try{content.setPointerCapture?.(e.pointerId);}catch(_){}
+    });
+    content.addEventListener("pointermove",e=>{
+      if(!tracking)return;
+      const dx=e.clientX-startX,dy=e.clientY-startY;
+      if(!axis&&(Math.abs(dx)>9||Math.abs(dy)>9)){
+        axis=Math.abs(dx)>Math.abs(dy)*1.15?"horizontal":"vertical";
+        stopTimer();
+        if(axis==="vertical"){tracking=false;return;}
+      }
+      if(axis!=="horizontal")return;
+      if(e.cancelable)e.preventDefault();
+      currentOffset=Math.max(-SWIPE_ACTION_WIDTH,Math.min(SWIPE_ACTION_WIDTH,startOffset+dx));
+      row.classList.add("swipe-dragging");
+      content.style.transition="none";
+      content.style.transform=`translate3d(${currentOffset}px,0,0)`;
+    });
+    content.addEventListener("pointerup",()=>{
+      if(!tracking)return;
+      tracking=false;
+      stopTimer();
+      if(axis==="horizontal"){
+        setTransactionSwipe(row,Math.abs(currentOffset)>=44?(currentOffset<0?"left":"right"):null);
+      }else if(startOffset){
+        setTransactionSwipe(row);
+      }
+    });
+    content.addEventListener("pointercancel",()=>{
+      tracking=false;stopTimer();
+      setTransactionSwipe(row,startOffset<0?"left":startOffset>0?"right":null);
+    });
+    content.addEventListener("pointerleave",e=>{
+      if(e.pointerType==="mouse"&&axis!=="horizontal"){tracking=false;stopTimer();}
+    });
+    row.querySelectorAll(".tx-swipe-delete").forEach(button=>{
+      button.addEventListener("click",e=>{
+        e.stopPropagation();
+        setTransactionSwipe(row);
+        deleteTransactionById(row.dataset.txId);
+      });
+    });
     row.addEventListener("contextmenu",e=>{e.preventDefault();e.stopPropagation();});
   });
 }
+document.addEventListener("pointerdown",e=>{
+  if(openTransactionSwipe&&!openTransactionSwipe.contains(e.target))setTransactionSwipe(openTransactionSwipe);
+});
 
 function renderTransactionSearch(){
   const q=($("transactionSearch")?.value||"").trim().toLowerCase();
@@ -1383,7 +1472,7 @@ function renderTransactionSearch(){
     });
   }
 
-  $("allTransactions").innerHTML=(rows.map(t=>`<div class="transaction-row transaction-editable" data-tx-id="${t.id}"><div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div></div>`).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
+  $("allTransactions").innerHTML=(rows.map(t=>transactionSwipeRow(t,`<div class="transaction-main"><strong>${escapeHtml(t.merchant||"עסקה")}</strong><div class="amount-negative amount-under-name">${money(t.amount)}</div><small>${escapeHtml(t.members?.name||"")} · ${new Date(t.occurred_at).toLocaleDateString("he-IL")} · ${escapeHtml(t.categories?.name||"ללא קטגוריה")}</small></div>`)).join("")||'<div class="empty-state">לא נמצאו עסקאות</div>');
   bindTransactionLongPress($("allTransactions"));
 
   const active=Boolean(q||categoryFilter||amountFilter);
