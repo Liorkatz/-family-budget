@@ -43,7 +43,7 @@ let selectedCategoryIndex = null;
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.3";
+const APP_VERSION="2.0.4";
 const LOCAL_DB_NAME="family-budget-local-v2";
 const LOCAL_DB_VERSION=1;
 const LOCAL_STORES=["transactions","incomes","fixed_expenses","categories","budgets","meta"];
@@ -770,6 +770,76 @@ document.querySelectorAll(".bottom-nav button").forEach(btn=>btn.onclick=()=>{
   openPage(btn.dataset.page);
 });
 
+// Apple Pay diagnostic history: private, admin-only, latest 100 requests.
+let shortcutLogLoading = false;
+const shortcutReasonLabels = {
+  missing_or_empty_amount: "לא התקבל סכום",
+  amount_must_be_greater_than_zero: "סכום לא תקין או אפס",
+  invalid_json: "גוף בקשה לא תקין",
+  invalid_category: "קטגוריה לא תקינה",
+  invalid_source: "מקור הוצאה לא תקין",
+  server_error: "שגיאת שרת בעת קליטה",
+  duplicate_external_id: "עסקה כפולה, לא נוצר רישום נוסף"
+};
+function renderShortcutLogs(logs) {
+  const list = $("shortcutLogsList");
+  if (!list) return;
+  if (!logs.length) {
+    list.innerHTML = '<div class="empty-state">אין בקשות המתאימות לסינון</div>';
+    return;
+  }
+  const logMoney = (value) => new Intl.NumberFormat("he-IL",{
+    style:"currency",currency:"ILS",maximumFractionDigits:2
+  }).format(Number(value));
+  list.innerHTML = logs.map(item=>{
+    const status = item.status==="success" ? "success" : item.status==="duplicate" ? "duplicate" : "error";
+    const statusText = status==="success" ? "נקלט" : status==="duplicate" ? "כפילות" : "נכשל";
+    const memberName = state.members.find(m=>m.id===item.member_id)?.name || "בן משפחה";
+    const time = new Date(item.created_at).toLocaleString("he-IL",{dateStyle:"short",timeStyle:"short"});
+    const reason = item.reason ? (shortcutReasonLabels[item.reason] || item.reason) : "";
+    const amount = item.amount === null || item.amount === undefined ? "סכום לא התקבל" : logMoney(item.amount);
+    const location = item.location_status==="ok" ? "מיקום תקין" :
+      item.location_status ? "מיקום: "+item.location_status : "";
+    return `<div class="shortcut-log-row">
+      <div class="shortcut-log-top"><span class="shortcut-log-state ${status}">${statusText}</span><strong dir="ltr">${escapeHtml(amount)}</strong><time>${escapeHtml(time)}</time></div>
+      <div class="shortcut-log-sub">${escapeHtml(memberName)} · HTTP ${Number(item.http_status)||0}${location ? " · "+escapeHtml(location) : ""}</div>
+      ${reason ? `<div class="shortcut-log-reason">${escapeHtml(reason)}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+async function loadShortcutLogs(){
+  if (shortcutLogLoading || state.me?.role!=="admin" || !state.family?.id) return;
+  const familyId=state.family.id;
+  const filter=$("shortcutLogFilter").value;
+  const refreshBtn=$("refreshShortcutLogs");
+  shortcutLogLoading=true;
+  refreshBtn.disabled=true;
+  $("shortcutLogSummary").textContent="טוען בקשות...";
+  try{
+    let query=sb.from("shortcut_request_logs")
+      .select("created_at,status,http_status,reason,amount,source,location_status,member_id,transaction_id")
+      .eq("family_id",familyId);
+    if(filter!=="all")query=query.eq("status",filter);
+    const {data,error}=await query.order("created_at",{ascending:false}).limit(100);
+    if(error)throw error;
+    if(state.family?.id!==familyId)return;
+    renderShortcutLogs(data||[]);
+    $("shortcutLogSummary").textContent=`מוצגות ${(data||[]).length} בקשות אחרונות · מעודכן ל־${new Date().toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}`;
+  }catch(err){
+    console.warn("Apple Pay audit fetch failed",err);
+    $("shortcutLogSummary").textContent="לא ניתן לטעון את היומן כרגע.";
+    $("shortcutLogsList").innerHTML="";
+  }finally{
+    refreshBtn.disabled=false;
+    shortcutLogLoading=false;
+  }
+}
+$("shortcutLogsCard").addEventListener("toggle",()=>{
+  if($("shortcutLogsCard").open)loadShortcutLogs();
+});
+$("refreshShortcutLogs").onclick=loadShortcutLogs;
+$("shortcutLogFilter").onchange=loadShortcutLogs;
+
 async function loadAll(){
   const f=state.family.id;
   const [members,cats,txs,incomes,fixed,budgets]=await Promise.all([
@@ -908,6 +978,7 @@ function render(){
   $("membersList").innerHTML=state.members.map(m=>`<div class="settings-row"><div><strong>${escapeHtml(m.name)}</strong><small>${m.role==="admin"?"מנהל":"בן משפחה"}</small></div><div class="mini-actions">${state.me?.role==="admin"?`<button class="mini-btn" onclick="editMember('${m.id}')">ערוך</button>${m.id!==state.me.id?`<button class="mini-btn danger-btn" onclick="deleteMember('${m.id}')">מחק</button>`:""}<button class="mini-btn" onclick="makeToken('${m.id}')">טוקן לקיצור</button>`:""}</div></div>`).join("");
 
   $("familyAdminCard").classList.toggle("hidden",state.me?.role!=="admin");
+  $("shortcutLogsCard").classList.toggle("hidden",state.me?.role!=="admin");
   if(state.me?.role==="admin"){
     const firstChar=state.adminInfo?.codeFirstChar||"";
     const lastChar=state.adminInfo?.codeLastChar||"";
