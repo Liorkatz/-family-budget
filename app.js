@@ -40,10 +40,11 @@ const escapeHtml = (v="") => String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"
 let authMode = "login";
 let categoryPieChart = null;
 let selectedCategoryIndex = null;
+let homePieMode = "categories";
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.4";
+const APP_VERSION="2.0.5";
 const LOCAL_DB_NAME="family-budget-local-v2";
 const LOCAL_DB_VERSION=1;
 const LOCAL_STORES=["transactions","incomes","fixed_expenses","categories","budgets","meta"];
@@ -867,48 +868,68 @@ async function loadAll(){
   render();
 }
 
+function getExpenseBreakdown(mode){
+  const byGroup=new Map();
+  for(const t of state.transactions){
+    const amount=Number(t.amount||0);
+    if(!Number.isFinite(amount)||amount<=0)continue;
+    let key,name;
+    if(mode==="members"){
+      const member=state.members.find(m=>m.id===t.member_id);
+      key=t.member_id ? "member:"+t.member_id : "member:unknown";
+      name=t.members?.name||member?.name||"לא ידוע";
+    }else{
+      const category=state.categories.find(c=>c.id===t.category_id);
+      key=t.category_id ? "category:"+t.category_id : "category:unknown";
+      name=t.categories?.name||category?.name||"ללא קטגוריה";
+    }
+    const group=byGroup.get(key);
+    if(group)group.value+=amount;
+    else byGroup.set(key,{name,value:amount});
+  }
+  return [...byGroup.values()].sort((a,b)=>b.value-a.value);
+}
+
 function renderCategoryPie(){
   const container=$("categoryPie");
   const legend=$("categoryLegend");
-  if(!container||!window.echarts)return;
+  if(!container||!legend||!window.echarts)return;
+  const entries=getExpenseBreakdown(homePieMode);
+  const isMembers=homePieMode==="members";
 
-  const byCat={};
-  state.transactions.forEach(t=>{
-    const key=t.categories?.name||"ללא קטגוריה";
-    byCat[key]=(byCat[key]||0)+Number(t.amount||0);
+  document.querySelectorAll("[data-pie-mode]").forEach(btn=>{
+    const active=btn.dataset.pieMode===homePieMode;
+    btn.classList.toggle("active",active);
+    btn.setAttribute("aria-pressed",String(active));
   });
-  const entries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  container.setAttribute("aria-label",isMembers?"התפלגות הוצאות לפי בני משפחה":"התפלגות הוצאות לפי קטגוריות");
 
   if(!entries.length){
     selectedCategoryIndex=null;
     if(categoryPieChart){categoryPieChart.dispose();categoryPieChart=null;}
-    container.innerHTML='<div class="empty-state chart-empty">אין עדיין עסקאות</div>';
-    if(legend)legend.innerHTML="";
+    container.innerHTML='<div class="empty-state chart-empty">אין עדיין הוצאות לחודש הזה</div>';
+    legend.innerHTML="";
     return;
   }
 
-  const total=entries.reduce((s,[,v])=>s+v,0);
-  const data=entries.map(([name,value],index)=>({
-    name,
-    value,
+  const total=entries.reduce((s,item)=>s+item.value,0);
+  const data=entries.map((item,index)=>({
+    name:item.name,
+    value:item.value,
     itemStyle:{
       color:PIE_COLORS[index%PIE_COLORS.length],
       borderColor:"#0d1929",
       borderWidth:2
     }
   }));
-
-  if(legend){
-    legend.innerHTML=data.map((item,index)=>{
-      const pct=Math.round((Number(item.value)/total)*100);
-      return `<div class="home-legend-row"><i class="home-legend-dot" style="background:${PIE_COLORS[index%PIE_COLORS.length]}"></i><span class="home-legend-name">${escapeHtml(item.name)}</span><strong class="home-legend-pct">${pct}%</strong></div>`;
-    }).join("");
-  }
+  legend.innerHTML=data.map((item,index)=>{
+    const pct=Math.round(Number(item.value)/total*100);
+    return `<div class="home-legend-row"><i class="home-legend-dot" style="background:${PIE_COLORS[index%PIE_COLORS.length]}"></i><span class="home-legend-name">${escapeHtml(item.name)}</span><span class="home-legend-metrics"><strong class="home-legend-pct">${pct}%</strong><small class="home-legend-amount">${money(item.value)}</small></span></div>`;
+  }).join("");
 
   if(categoryPieChart)categoryPieChart.dispose();
   container.innerHTML="";
   categoryPieChart=echarts.init(container);
-
   categoryPieChart.setOption({
     animationDuration:600,
     animationEasing:"cubicOut",
@@ -928,7 +949,7 @@ function renderCategoryPie(){
         position:"inside",
         formatter:p=>p.percent>=5?`${Math.round(p.percent)}%`:"",
         color:"#fff",
-        fontSize:14,
+        fontSize:16,
         fontWeight:800
       },
       labelLine:{show:false},
@@ -943,6 +964,14 @@ function renderCategoryPie(){
 
   setTimeout(()=>categoryPieChart?.resize(),40);
 }
+
+document.querySelectorAll("[data-pie-mode]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(btn.dataset.pieMode===homePieMode)return;
+    homePieMode=btn.dataset.pieMode;
+    renderCategoryPie();
+  });
+});
 
 function txCategoryIcon(name=""){
   const n=String(name||"").toLowerCase();
@@ -1005,8 +1034,13 @@ function render(){
     $("transactionCategoryFilter").value=values.includes(keep)?keep:"";
   }
 
-  const byMember={};state.transactions.forEach(t=>{const k=t.members?.name||"לא ידוע";byMember[k]=(byMember[k]||0)+Number(t.amount)});
-  $("memberBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>הוצאות לפי בן משפחה</strong></div>'+Object.entries(byMember).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`<div class="settings-row"><span>${escapeHtml(n)}</span><strong>${money(v)}</strong></div>`).join("")+'</div>';
+  const memberEntries=getExpenseBreakdown("members");
+  const memberTotal=memberEntries.reduce((sum,item)=>sum+item.value,0);
+  $("memberBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>הוצאות לפי בן משפחה</strong></div>'+(
+    memberEntries.length
+      ? memberEntries.map(item=>`<div class="member-breakdown-row"><span class="member-breakdown-name">${escapeHtml(item.name)}</span><span class="member-breakdown-values"><strong>${money(item.value)}</strong><b>${Math.round(item.value/memberTotal*100)}%</b></span></div>`).join("")
+      : '<div class="empty-state">אין עדיין הוצאות לחודש הזה</div>'
+  )+'</div>';
   $("budgetBreakdown").innerHTML='<div class="analysis-block"><div class="bar-label"><strong>ניצול תקציבים</strong></div>'+state.budgets.map(b=>{const used=state.transactions.filter(t=>t.category_id===b.category_id).reduce((s,t)=>s+Number(t.amount),0);const pct=Math.min(100,Math.round(used/Number(b.monthly_limit)*100)||0);return `<div style="margin:14px 0"><div class="bar-label"><span>${escapeHtml(b.categories?.name||"קטגוריה")}</span><strong>${money(used)} / ${money(b.monthly_limit)}</strong></div><div class="progress"><i style="width:${pct}%"></i></div></div>`}).join("")+'</div>';
   if($("analysisPage")?.classList.contains("active"))setTimeout(renderPurchaseMap,80);
 }
