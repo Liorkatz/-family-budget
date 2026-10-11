@@ -3277,3 +3277,104 @@ html[data-theme="light"] .tx-swipe-delete{color:#fff!important}
 html[data-theme="light"] .settings-total{background:#f1f5fc;border-color:#dbe4ef;color:#536984}
 html[data-theme="light"] .settings-total strong{color:#243a5b}
 html[data-theme="light"] .fixed-auto-status{color:#687d96}
+
+
+/* v2.0.11 - tighter fixed expense rows and compact family code */
+#fixedList.settings-list{
+  gap:3px!important;
+  margin-top:8px;
+}
+#fixedList .settings-row.fixed-edit-row{
+  min-height:49px!important;
+  padding:5px 9px!important;
+  margin-bottom:0!important;
+  gap:7px!important;
+}
+#fixedList .fixed-edit{
+  gap:0!important;
+}
+#fixedList .fixed-auto-amount{
+  min-height:39px!important;
+  width:102px!important;
+  padding:6px 7px!important;
+  font-size:16px!important;
+}
+#fixedList .settings-row small{
+  margin-top:0;
+  line-height:1.2;
+}
+#familyAdminCard{
+  padding:0!important;
+}
+#familySettingsCard .compact-family-code{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:2px 0 6px;
+  margin:0;
+}
+#familySettingsCard .family-code-current{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
+  text-align:right;
+  gap:5px 9px;
+  min-width:0;
+}
+#familySettingsCard .family-code-current small{
+  display:inline;
+  margin:0!important;
+  font-size:12px;
+  white-space:nowrap;
+}
+#familySettingsCard #familyCodeHint{
+  display:inline-block;
+  font-size:15px;
+  line-height:1.2;
+  white-space:nowrap;
+  max-width:100%;
+}
+#familySettingsCard .compact-family-form{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  margin:0;
+  padding:0 0 8px;
+  align-items:center;
+}
+#familySettingsCard .compact-family-form input{
+  min-width:0;
+  width:100%;
+  min-height:39px;
+  padding:7px 10px;
+  font-size:16px!important;
+}
+#familySettingsCard .compact-family-code .small-btn,
+#familySettingsCard .compact-family-form .small-btn{
+  min-height:39px;
+  padding:7px 10px;
+  font-size:13px;
+  white-space:nowrap;
+}
+@media(max-width:480px){
+  #fixedList.settings-list{gap:2px!important}
+  #fixedList .settings-row.fixed-edit-row{
+    min-height:47px!important;
+    padding:4px 7px!important;
+  }
+  #fixedList .fixed-auto-amount{
+    width:98px!important;
+    min-height:39px!important;
+    font-size:16px!important;
+  }
+  #familySettingsCard .compact-family-code,
+  #familySettingsCard .compact-family-form{gap:6px}
+  #familySettingsCard .compact-family-code .small-btn,
+  #familySettingsCard .compact-family-form .small-btn{
+    padding:7px 9px;
+    font-size:13px;
+  }
+}
