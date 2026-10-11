@@ -3020,3 +3020,23 @@ body{
   #homePage .home-legend-pct{font-size:17px}
   #homePage .home-legend-amount{font-size:13px}
 }
+
+
+/* v2.0.6 - clean centered home summary cards */
+#homePage .home-stats-grid .stat-card{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto;
+  justify-items:center;
+  align-content:center;
+  text-align:center!important;
+}
+#homePage .home-stats-grid .stat-card > span,
+#homePage .home-stats-grid .stat-card > strong{
+  grid-column:1!important;
+  justify-self:center;
+  width:100%;
+  min-width:0;
+  text-align:center!important;
+}
+#homePage .home-stats-grid .stat-card > span{grid-row:1}
+#homePage .home-stats-grid .stat-card > strong{grid-row:2}
