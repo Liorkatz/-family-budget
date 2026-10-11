@@ -4,6 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#07101D" />
+  <script>
+    try {
+      document.documentElement.dataset.theme=localStorage.getItem("family-budget-theme")==="light"?"light":"dark";
+    } catch (_) {
+      document.documentElement.dataset.theme="dark";
+    }
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Family Budget" />
@@ -15,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=209" />
+  <link rel="stylesheet" href="./styles.css?v=210" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -79,7 +86,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.8</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.9</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -163,7 +170,6 @@
         <div class="page-title"><div><p class="eyebrow">ניתוח</p><h2>תמונת מצב</h2></div></div>
 
         <section class="panel"><div id="memberBreakdown"></div></section>
-        <section class="panel"><div id="budgetBreakdown"></div></section>
 
         <section class="panel map-panel">
           <div class="map-head">
@@ -180,65 +186,6 @@
 
       <section id="settingsPage" class="page">
         <div class="page-title"><div><p class="eyebrow">ניהול</p><h2>הגדרות</h2></div></div>
-
-        <details id="privacyCard" class="settings-card privacy-card" open>
-          <summary>פרטיות ואחסון</summary>
-          <div class="privacy-hero">
-            <span class="privacy-lock">🔒</span>
-            <div>
-              <strong>המידע המשפחתי מסונכרן דרך השרת</strong>
-              <p>עסקאות, הכנסות, קטגוריות, תקציבים, הוצאות קבועות ומיקומים נשמרים ב־Supabase כדי שכל בני המשפחה יראו את אותו מידע.</p>
-            </div>
-          </div>
-          <div class="privacy-grid">
-            <div><span>שם משתמש</span><strong>שרת</strong></div>
-            <div><span>אימייל</span><strong>שרת</strong></div>
-            <div><span>שיוך למשפחה</span><strong>שרת</strong></div>
-            <div><span>Token לקיצור</span><strong>שרת</strong></div>
-            <div><span>הוצאות והכנסות</span><strong>שרת משפחתי</strong></div>
-            <div><span>סכומים ומיקומים</span><strong>שרת משפחתי</strong></div>
-            <div><span>קטגוריות ותקציבים</span><strong>שרת משפחתי</strong></div>
-            <div><span>סטטיסטיקת שימוש</span><strong>מונה בלבד</strong></div>
-          </div>
-          <p class="privacy-note">הגישה לנתוני המשפחה מוגנת באמצעות חשבון המשתמש והרשאות המשפחה. קיצור Apple Pay שולח עסקאות באמצעות Token אישי של בן המשפחה.</p>
-        </details>
-
-        <details id="familyAdminCard" class="settings-card" open>
-          <summary>ניהול המשפחה</summary>
-          <div class="family-code-box compact-family-code">
-            <div class="family-code-current">
-              <small id="familyCodeLabel">קוד משפחה</small>
-              <strong id="familyCodeHint" dir="ltr">לא הוגדר</strong>
-            </div>
-            <button id="rotateFamilyCode" class="small-btn" type="button">קוד אקראי</button>
-          </div>
-          <div id="customFamilyCodeForm" class="inline-form family-code-form compact-family-form">
-            <input id="customFamilyCode" minlength="6" maxlength="24" placeholder="קוד חדש" autocapitalize="characters" />
-            <button id="saveFamilyCode" class="small-btn" type="button">שמור</button>
-          </div>
-          <div id="pendingRequests" class="settings-list compact-pending hidden"></div>
-        </details>
-
-        <details id="shortcutLogsCard" class="settings-card shortcut-logs-card hidden">
-          <summary>יומן קליטות Apple Pay</summary>
-          <p class="muted compact">בקשות שנשלחו מהקיצור, כולל הצלחות ושגיאות. מוצג למנהל המשפחה בלבד. ללא Token או פרטי כרטיס.</p>
-          <div class="shortcut-log-toolbar">
-            <select id="shortcutLogFilter" aria-label="סינון יומן קליטות">
-              <option value="all">כל הבקשות</option>
-              <option value="error">שגיאות בלבד</option>
-              <option value="success">הצלחות בלבד</option>
-            </select>
-            <button id="refreshShortcutLogs" type="button" class="small-btn secondary-btn">רענן לוג</button>
-          </div>
-          <div id="shortcutLogSummary" class="muted shortcut-log-summary" aria-live="polite">פתח את היומן כדי להציג נתונים.</div>
-          <div id="shortcutLogsList" class="shortcut-log-list"></div>
-          <p class="muted shortcut-log-hint">הלוג מציג עד 100 בקשות אחרונות מהפעלת המעקב והלאה. בקשה ללא Token תקין אינה משויכת למשפחה ולכן אינה מופיעה כאן.</p>
-        </details>
-
-        <details class="settings-card" open>
-          <summary>בני משפחה</summary>
-          <div id="membersList" class="settings-list"></div>
-        </details>
 
         <details class="settings-card">
           <summary>הכנסות</summary>
@@ -261,6 +208,41 @@
           <div id="fixedList" class="settings-list"></div>
         </details>
 
+        <details id="appearanceCard" class="settings-card" open>
+          <summary>תצוגה</summary>
+          <p class="muted compact">בחר את מצב התצוגה באתר. הבחירה תישמר במכשיר שלך.</p>
+          <div class="theme-choices" role="group" aria-label="מצב תצוגה">
+            <button type="button" class="theme-choice" data-theme-choice="dark" aria-pressed="true">מצב כהה</button>
+            <button type="button" class="theme-choice" data-theme-choice="light" aria-pressed="false">מצב בהיר</button>
+          </div>
+        </details>
+
+        <details id="familySettingsCard" class="settings-card" open>
+          <summary>ניהול משפחה</summary>
+          <div id="familyAdminCard" class="family-admin-tools">
+
+          <div class="family-code-box compact-family-code">
+            <div class="family-code-current">
+              <small id="familyCodeLabel">קוד משפחה</small>
+              <strong id="familyCodeHint" dir="ltr">לא הוגדר</strong>
+            </div>
+            <button id="rotateFamilyCode" class="small-btn" type="button">קוד אקראי</button>
+          </div>
+          <div id="customFamilyCodeForm" class="inline-form family-code-form compact-family-form">
+            <input id="customFamilyCode" minlength="6" maxlength="24" placeholder="קוד חדש" autocapitalize="characters" />
+            <button id="saveFamilyCode" class="small-btn" type="button">שמור</button>
+          </div>
+          <div id="pendingRequests" class="settings-list compact-pending hidden"></div>
+        
+          </div>
+          <div class="family-members-section">
+            <h3>בני משפחה</h3>
+
+          <div id="membersList" class="settings-list"></div>
+        
+          </div>
+        </details>
+
         <details class="settings-card">
           <summary>קטגוריות ותקציבים</summary>
           <form id="categoryForm" class="inline-form">
@@ -268,6 +250,45 @@
             <button class="small-btn" type="submit">הוסף</button>
           </form>
           <div id="categoriesList" class="settings-list"></div>
+          <div id="budgetBreakdown" class="settings-budget-breakdown"></div>
+        </details>
+
+        <details id="privacyCard" class="settings-card privacy-card">
+          <summary>פרטיות ואחסון</summary>
+          <div class="privacy-hero">
+            <span class="privacy-lock">🔒</span>
+            <div>
+              <strong>המידע המשפחתי מסונכרן דרך השרת</strong>
+              <p>עסקאות, הכנסות, קטגוריות, תקציבים, הוצאות קבועות ומיקומים נשמרים ב־Supabase כדי שכל בני המשפחה יראו את אותו מידע.</p>
+            </div>
+          </div>
+          <div class="privacy-grid">
+            <div><span>שם משתמש</span><strong>שרת</strong></div>
+            <div><span>אימייל</span><strong>שרת</strong></div>
+            <div><span>שיוך למשפחה</span><strong>שרת</strong></div>
+            <div><span>Token לקיצור</span><strong>שרת</strong></div>
+            <div><span>הוצאות והכנסות</span><strong>שרת משפחתי</strong></div>
+            <div><span>סכומים ומיקומים</span><strong>שרת משפחתי</strong></div>
+            <div><span>קטגוריות ותקציבים</span><strong>שרת משפחתי</strong></div>
+            <div><span>סטטיסטיקת שימוש</span><strong>מונה בלבד</strong></div>
+          </div>
+          <p class="privacy-note">הגישה לנתוני המשפחה מוגנת באמצעות חשבון המשתמש והרשאות המשפחה. קיצור Apple Pay שולח עסקאות באמצעות Token אישי של בן המשפחה.</p>
+        </details>
+
+        <details id="shortcutLogsCard" class="settings-card shortcut-logs-card hidden">
+          <summary>יומן קליטות Apple Pay</summary>
+          <p class="muted compact">בקשות שנשלחו מהקיצור, כולל הצלחות ושגיאות. מוצג למנהל המשפחה בלבד. ללא Token או פרטי כרטיס.</p>
+          <div class="shortcut-log-toolbar">
+            <select id="shortcutLogFilter" aria-label="סינון יומן קליטות">
+              <option value="all">כל הבקשות</option>
+              <option value="error">שגיאות בלבד</option>
+              <option value="success">הצלחות בלבד</option>
+            </select>
+            <button id="refreshShortcutLogs" type="button" class="small-btn secondary-btn">רענן לוג</button>
+          </div>
+          <div id="shortcutLogSummary" class="muted shortcut-log-summary" aria-live="polite">פתח את היומן כדי להציג נתונים.</div>
+          <div id="shortcutLogsList" class="shortcut-log-list"></div>
+          <p class="muted shortcut-log-hint">הלוג מציג עד 100 בקשות אחרונות מהפעלת המעקב והלאה. בקשה ללא Token תקין אינה משויכת למשפחה ולכן אינה מופיעה כאן.</p>
         </details>
       </section>
     </section>
@@ -337,6 +358,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=209"></script>
+  <script src="./app.js?v=210"></script>
 </body>
 </html>
