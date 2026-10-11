@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=206" />
+  <link rel="stylesheet" href="./styles.css?v=207" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -79,7 +79,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.5</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.6</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -94,22 +94,22 @@
 
         <section class="stats-grid home-stats-grid">
           <article id="incomeStatCard" class="stat-card income-private stat-income" role="button" tabindex="0" aria-label="הכנסות מוסתרות. לחץ להצגה">
-            <div class="stat-icon" aria-hidden="true">▥</div>
+
             <span>הכנסות <small class="income-lock-hint" id="incomeLockHint">🔒</small></span>
             <strong id="incomeAmount" class="income-blurred">₪0</strong>
           </article>
           <article class="stat-card stat-spent">
-            <div class="stat-icon" aria-hidden="true">▭</div>
+
             <span>הוצאות בפועל</span>
             <strong id="spentAmount">₪0</strong>
           </article>
           <article id="fixedStatCard" class="stat-card clickable-card stat-fixed" role="button" tabindex="0">
-            <div class="stat-icon" aria-hidden="true">□</div>
+
             <span>קבועות החודש</span>
             <strong id="fixedAmount">₪0</strong>
           </article>
           <article class="stat-card stat-forecast">
-            <div class="stat-icon" aria-hidden="true">↗</div>
+
             <span>תחזית סוף חודש</span>
             <strong id="forecastAmount">₪0</strong>
           </article>
@@ -337,6 +337,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=206"></script>
+  <script src="./app.js?v=207"></script>
 </body>
 </html>
