@@ -44,7 +44,7 @@ let homePieMode = "categories";
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.9";
+const APP_VERSION="2.0.10";
 
 const DISPLAY_THEME_KEY="family-budget-theme";
 function applyDisplayTheme(theme,{persist=true}={}){
@@ -782,9 +782,18 @@ async function moveMonth(delta){
 $("prevMonth").onclick=()=>moveMonth(-1);
 $("nextMonth").onclick=()=>moveMonth(1);
 
+function resetPageScroll(){
+  window.scrollTo(0,0);
+  if(document.scrollingElement)document.scrollingElement.scrollTop=0;
+}
 function openPage(pageId){
   document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===pageId));
   document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===pageId));
+  if(pageId==="settingsPage"){
+    document.querySelectorAll("#settingsPage details.settings-card").forEach(card=>{card.open=false;});
+  }
+  resetPageScroll();
+  requestAnimationFrame(()=>resetPageScroll());
   if(pageId==="analysisPage")setTimeout(renderPurchaseMap,80);
   if(pageId==="homePage"){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -1067,6 +1076,8 @@ function render(){
       ? pending.map(r=>`<div class="settings-row"><div><strong>${escapeHtml(r.display_name)}</strong><small>בקשת הצטרפות</small></div><div class="mini-actions"><button class="mini-btn approve" onclick="decideJoin('${r.id}','approve')">אשר</button><button class="mini-btn" onclick="decideJoin('${r.id}','reject')">דחה</button></div></div>`).join("")
       : "";
   }
+  $("incomeTotalSummary").innerHTML=`<span>סה״כ הכנסות חודשיות</span><strong>${money(state.incomes.reduce((sum,item)=>sum+Number(item.amount||0),0))}</strong>`;
+  $("fixedTotalSummary").innerHTML=`<span>סה״כ הוצאות קבועות</span><strong>${money(state.fixed.reduce((sum,item)=>sum+Number(item.amount||0),0))}</strong>`;
   $("incomeList").innerHTML=state.incomes.map(x=>`<div class="settings-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי · ${money(x.amount)}</small></div><div class="mini-actions"><button class="mini-btn" onclick="editIncome('${x.id}')">ערוך</button><button class="mini-btn danger-btn" onclick="deleteIncome('${x.id}')">מחק</button></div></div>`).join("")||'<div class="empty-state">אין הכנסות</div>';
   renderFixedList();
   $("categoriesList").innerHTML=state.categories.map(c=>{const b=state.budgets.find(x=>x.category_id===c.id);return `<div class="settings-row"><div><strong>${escapeHtml(c.name)}</strong><small>${b?"תקציב "+money(b.monthly_limit):"ללא תקציב"}</small></div><div class="mini-actions"><button class="mini-btn" onclick="setBudget('${c.id}')">תקציב</button></div></div>`}).join("");
@@ -1162,11 +1173,57 @@ function renderFixedList(filterText=""){
   if(q){
     rows=rows.filter(x=>String(x.description||"").toLocaleLowerCase("he").includes(q));
   }
-  $("fixedList").innerHTML=rows.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal"><button class="mini-btn" onclick="saveFixed('${x.id}')">שמור</button></div></div>`).join("")||(q?'<div class="empty-state">לא נמצאו סעיפים תואמים</div>':'<div class="empty-state">אין הוצאות קבועות</div>');
+  $("fixedList").innerHTML=rows.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" class="fixed-auto-amount" data-fixed-id="${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal" aria-label="סכום חודשי עבור ${escapeHtml(x.description)}" aria-describedby="fixedSaveStatus-${x.id}"><small id="fixedSaveStatus-${x.id}" class="fixed-auto-status" aria-live="polite">אוטומטי</small></div></div>`).join("")||(q?'<div class="empty-state">לא נמצאו סעיפים תואמים</div>':'<div class="empty-state">אין הוצאות קבועות</div>');
 }
 $("fixedDesc").oninput=()=>renderFixedList($("fixedDesc").value);
 $("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
-window.saveFixed=async(id)=>{const item=state.fixed.find(x=>x.id===id);if(!item)return;const previous=Number(item.amount);const amount=Number($("fixed-"+id).value);if(!Number.isFinite(amount)||amount<0)return toast("סכום לא תקין");const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);if(error)return toast(error.message);await loadAll();toast("ההוצאה עודכנה",async()=>{const {error}=await sb.from("fixed_expenses").update({amount:previous}).eq("id",id);if(error)throw error;await loadAll();});};
+const savingFixedIds=new Set();
+window.saveFixed=async(id)=>{
+  const item=state.fixed.find(x=>x.id===id);
+  const input=$("fixed-"+id);
+  if(!item||!input||savingFixedIds.has(id))return;
+  const previous=Number(item.amount);
+  const raw=input.value.trim();
+  const amount=Number(raw);
+  const status=$("fixedSaveStatus-"+id);
+  if(raw===""||!Number.isFinite(amount)||amount<0){
+    input.value=String(previous);
+    if(status)status.textContent="סכום שגוי";
+    toast("סכום לא תקין");
+    return;
+  }
+  if(amount===previous){if(status)status.textContent="מעודכן";return;}
+  savingFixedIds.add(id);
+  input.disabled=true;
+  if(status)status.textContent="שומר…";
+  try{
+    const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);
+    if(error)throw error;
+    await loadAll();
+    toast("הסכום נשמר",async()=>{
+      const {error}=await sb.from("fixed_expenses").update({amount:previous}).eq("id",id);
+      if(error)throw error;
+      await loadAll();
+    });
+  }catch(err){
+    input.value=String(previous);
+    if(status)status.textContent="לא נשמר";
+    toast(err?.message||"הסכום לא נשמר");
+  }finally{
+    savingFixedIds.delete(id);
+    if(input.isConnected)input.disabled=false;
+  }
+};
+$("fixedList").addEventListener("change",event=>{
+  const input=event.target.closest?.(".fixed-auto-amount");
+  if(input&&$("fixedList").contains(input))window.saveFixed(input.dataset.fixedId);
+});
+$("fixedList").addEventListener("keydown",event=>{
+  if(event.key==="Enter"&&event.target.matches?.(".fixed-auto-amount")){
+    event.preventDefault();
+    event.target.blur();
+  }
+});
 $("categoryForm").onsubmit=async(e)=>{e.preventDefault();const {error}=await sb.from("categories").insert({family_id:state.family.id,name:$("categoryName").value.trim()});if(error)return toast(error.message);e.target.reset();await loadAll();};
 
 window.setBudget=async(categoryId)=>{
