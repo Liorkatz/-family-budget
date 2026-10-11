@@ -3073,3 +3073,73 @@ body{
 @media(max-width:360px){
   #homePage .home-stats-grid .stat-card > strong{font-size:25px}
 }
+
+
+/* v2.0.8 - swipe-to-reveal delete on transactions */
+#recentTransactions .tx-swipe-row,
+#allTransactions .tx-swipe-row,
+#homePage #recentTransactions .tx-swipe-row{
+  position:relative;
+  padding:0!important;
+  overflow:hidden;
+  isolation:isolate;
+}
+#recentTransactions .tx-swipe-content,
+#allTransactions .tx-swipe-content{
+  position:relative;
+  z-index:1;
+  box-sizing:border-box;
+  width:100%;
+  padding:14px 2px;
+  background:#0d1929;
+  touch-action:pan-y;
+  will-change:transform;
+  transition:transform .2s cubic-bezier(.22,.78,.25,1);
+}
+#allTransactions .tx-swipe-content{background:#101b2b}
+#homePage #recentTransactions .tx-swipe-content{
+  min-height:70px;
+  padding:14px 50px 14px 2px;
+}
+#recentTransactions .tx-swipe-row.swipe-dragging .tx-swipe-content,
+#allTransactions .tx-swipe-row.swipe-dragging .tx-swipe-content{
+  transition:none;
+}
+#recentTransactions .tx-swipe-delete,
+#allTransactions .tx-swipe-delete{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:86px;
+  z-index:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  border-radius:0;
+  background:#cc3650;
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  pointer-events:none;
+}
+#recentTransactions .tx-swipe-delete--left,
+#allTransactions .tx-swipe-delete--left{right:0}
+#recentTransactions .tx-swipe-delete--right,
+#allTransactions .tx-swipe-delete--right{left:0}
+#recentTransactions .swiped-left .tx-swipe-delete--left,
+#allTransactions .swiped-left .tx-swipe-delete--left,
+#recentTransactions .swiped-right .tx-swipe-delete--right,
+#allTransactions .swiped-right .tx-swipe-delete--right{pointer-events:auto}
+#recentTransactions .tx-swipe-delete:focus-visible,
+#allTransactions .tx-swipe-delete:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:-3px;
+}
+@media(max-width:480px){
+  #homePage #recentTransactions .tx-swipe-content{
+    min-height:58px;
+    padding:10px 43px 10px 1px;
+  }
+}
