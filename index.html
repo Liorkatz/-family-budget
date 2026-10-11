@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=210" />
+  <link rel="stylesheet" href="./styles.css?v=211" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -86,7 +86,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.9</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.10</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -195,6 +195,7 @@
             <button class="small-btn" type="submit">הוסף</button>
           </form>
           <div id="incomeList" class="settings-list"></div>
+          <div id="incomeTotalSummary" class="settings-total" aria-live="polite"></div>
         </details>
 
         <details id="fixedExpensesCard" class="settings-card">
@@ -206,9 +207,10 @@
             <button class="small-btn" type="submit">הוסף</button>
           </form>
           <div id="fixedList" class="settings-list"></div>
+          <div id="fixedTotalSummary" class="settings-total" aria-live="polite"></div>
         </details>
 
-        <details id="appearanceCard" class="settings-card" open>
+        <details id="appearanceCard" class="settings-card">
           <summary>תצוגה</summary>
           <p class="muted compact">בחר את מצב התצוגה באתר. הבחירה תישמר במכשיר שלך.</p>
           <div class="theme-choices" role="group" aria-label="מצב תצוגה">
@@ -217,7 +219,7 @@
           </div>
         </details>
 
-        <details id="familySettingsCard" class="settings-card" open>
+        <details id="familySettingsCard" class="settings-card">
           <summary>ניהול משפחה</summary>
           <div id="familyAdminCard" class="family-admin-tools">
 
@@ -358,6 +360,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=210"></script>
+  <script src="./app.js?v=211"></script>
 </body>
 </html>
