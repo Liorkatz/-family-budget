@@ -3040,3 +3040,36 @@ body{
 }
 #homePage .home-stats-grid .stat-card > span{grid-row:1}
 #homePage .home-stats-grid .stat-card > strong{grid-row:2}
+
+
+/* v2.0.7 - larger elevated summary typography */
+#homePage .home-stats-grid .stat-card > span,
+#homePage .home-stats-grid .stat-card > strong{
+  position:relative;
+  top:-5px;
+}
+#homePage .home-stats-grid .stat-card > span{
+  font-size:19px;
+  line-height:1.25;
+  font-weight:800;
+  overflow-wrap:normal;
+}
+#homePage .home-stats-grid .stat-card > strong{
+  font-size:31px;
+  line-height:1.12;
+  margin-top:7px;
+}
+@media(max-width:480px){
+  #homePage .home-stats-grid .stat-card > span{
+    font-size:clamp(15.5px,4.2vw,17px);
+    line-height:1.23;
+  }
+  #homePage .home-stats-grid .stat-card > strong{
+    font-size:27px;
+    line-height:1.13;
+    margin-top:7px;
+  }
+}
+@media(max-width:360px){
+  #homePage .home-stats-grid .stat-card > strong{font-size:25px}
+}
