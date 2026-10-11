@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
-  <link rel="stylesheet" href="./styles.css?v=205" />
+  <link rel="stylesheet" href="./styles.css?v=206" />
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -79,7 +79,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.4</button>
+          <button id="appVersion" class="version-badge" type="button" aria-label="רענן ועדכן">v2.0.5</button>
           <button id="logoutBtn" class="icon-btn" aria-label="התנתק">↪</button>
         </div>
       </header>
@@ -116,10 +116,16 @@
         </section>
 
         <section class="panel home-chart-panel">
-          <div class="home-panel-title">התפלגות הוצאות בפועל</div>
+          <div class="home-chart-heading">
+            <div class="home-panel-title">התפלגות הוצאות בפועל</div>
+            <div class="home-chart-tabs" role="group" aria-label="בחר סוג התפלגות">
+              <button type="button" class="home-chart-tab active" data-pie-mode="categories" aria-pressed="true">קטגוריות</button>
+              <button type="button" class="home-chart-tab" data-pie-mode="members" aria-pressed="false">בני משפחה</button>
+            </div>
+          </div>
           <div class="home-chart-layout">
-            <div id="categoryPie" class="category-pie"></div>
-            <div id="categoryLegend" class="home-chart-legend"></div>
+            <div id="categoryPie" class="category-pie" aria-label="התפלגות הוצאות לפי קטגוריה"></div>
+            <div id="categoryLegend" class="home-chart-legend" aria-live="polite"></div>
           </div>
         </section>
 
@@ -331,6 +337,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20260925-1435"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
-  <script src="./app.js?v=205"></script>
+  <script src="./app.js?v=206"></script>
 </body>
 </html>
