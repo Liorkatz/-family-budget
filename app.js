@@ -918,8 +918,8 @@ function renderCategoryPie(){
     },
     series:[{
       type:"pie",
-      radius:"73%",
-      center:["50%","52%"],
+      radius:"88%",
+      center:["50%","50%"],
       startAngle:90,
       minAngle:3,
       avoidLabelOverlap:true,
