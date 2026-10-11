@@ -3238,3 +3238,42 @@ html[data-theme="light"] .shortcut-log-row{background:#f7f9fd!important;border-c
 html[data-theme="light"] .shortcut-log-sub,
 html[data-theme="light"] .shortcut-log-hint{color:#65768f!important}
 html[data-theme="light"] .tx-swipe-delete{color:#fff!important}
+
+
+/* v2.0.10 - analysis top, compact map, collapsed settings and fixed autosave */
+#analysisPage .page-title{margin-bottom:9px}
+#analysisPage > .panel{margin-top:10px;padding:13px 14px}
+#analysisPage #memberBreakdown .member-breakdown-row{min-height:42px;padding:8px 1px}
+#purchaseMap{height:clamp(280px,45dvh,440px)!important;min-height:280px!important}
+#analysisPage .map-head h3{font-size:20px}
+.settings-total{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:12px 0 14px;
+  padding:9px 12px;
+  border-radius:11px;
+  border:1px solid rgba(139,164,204,.16);
+  background:rgba(119,147,201,.08);
+  font-size:13px;
+  line-height:1.3;
+  color:#aabbd0;
+}
+.settings-total strong{font-size:17px;color:#f1f6ff;white-space:nowrap}
+#fixedList .fixed-auto-amount{width:110px;font-size:16px!important;min-height:40px;text-align:center}
+#fixedList .fixed-edit{gap:8px}
+.fixed-auto-status{font-size:11px;white-space:nowrap;color:#8799b3}
+@media(max-width:600px){
+  #settingsPage input,
+  #settingsPage select,
+  #settingsPage textarea{font-size:16px!important}
+  #fixedList .fixed-auto-amount{width:110px!important;font-size:16px!important}
+  #fixedList .fixed-auto-status{font-size:11px}
+  #analysisPage .page-title{margin-bottom:8px}
+  #analysisPage > .panel{padding:12px 12px;margin-top:9px}
+  #purchaseMap{height:clamp(280px,42dvh,375px)!important;min-height:280px!important}
+}
+html[data-theme="light"] .settings-total{background:#f1f5fc;border-color:#dbe4ef;color:#536984}
+html[data-theme="light"] .settings-total strong{color:#243a5b}
+html[data-theme="light"] .fixed-auto-status{color:#687d96}
