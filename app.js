@@ -44,7 +44,7 @@ let homePieMode = "categories";
 const PIE_COLORS=["#6478F3","#8B5CF6","#22B8CF","#34C875","#F2A51A","#EF5B5B","#E85D9E","#8BCF2F","#28B7A5","#F47B35"];
 let state = { family:null, me:null, members:[], categories:[], transactions:[], incomes:[], fixed:[], budgets:[], adminInfo:null };
 
-const APP_VERSION="2.0.10";
+const APP_VERSION="2.0.11";
 
 const DISPLAY_THEME_KEY="family-budget-theme";
 function applyDisplayTheme(theme,{persist=true}={}){
@@ -1173,7 +1173,7 @@ function renderFixedList(filterText=""){
   if(q){
     rows=rows.filter(x=>String(x.description||"").toLocaleLowerCase("he").includes(q));
   }
-  $("fixedList").innerHTML=rows.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" class="fixed-auto-amount" data-fixed-id="${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal" aria-label="סכום חודשי עבור ${escapeHtml(x.description)}" aria-describedby="fixedSaveStatus-${x.id}"><small id="fixedSaveStatus-${x.id}" class="fixed-auto-status" aria-live="polite">אוטומטי</small></div></div>`).join("")||(q?'<div class="empty-state">לא נמצאו סעיפים תואמים</div>':'<div class="empty-state">אין הוצאות קבועות</div>');
+  $("fixedList").innerHTML=rows.map(x=>`<div class="settings-row fixed-edit-row"><div><strong>${escapeHtml(x.description)}</strong><small>חודשי</small></div><div class="fixed-edit"><input id="fixed-${x.id}" class="fixed-auto-amount" data-fixed-id="${x.id}" type="number" min="0" step="0.01" value="${Number(x.amount)}" inputmode="decimal" aria-label="סכום חודשי עבור ${escapeHtml(x.description)}"></div></div>`).join("")||(q?'<div class="empty-state">לא נמצאו סעיפים תואמים</div>':'<div class="empty-state">אין הוצאות קבועות</div>');
 }
 $("fixedDesc").oninput=()=>renderFixedList($("fixedDesc").value);
 $("fixedForm").onsubmit=async(e)=>{e.preventDefault();const nextOrder=Math.min(0,...state.fixed.map(x=>Number(x.display_order)||0))-1;const {error}=await sb.from("fixed_expenses").insert({family_id:state.family.id,description:$("fixedDesc").value.trim(),amount:Number($("fixedValue").value),frequency:"monthly",display_order:nextOrder});if(error)return toast(error.message);e.target.reset();await loadAll();};
@@ -1185,17 +1185,14 @@ window.saveFixed=async(id)=>{
   const previous=Number(item.amount);
   const raw=input.value.trim();
   const amount=Number(raw);
-  const status=$("fixedSaveStatus-"+id);
   if(raw===""||!Number.isFinite(amount)||amount<0){
     input.value=String(previous);
-    if(status)status.textContent="סכום שגוי";
     toast("סכום לא תקין");
     return;
   }
-  if(amount===previous){if(status)status.textContent="מעודכן";return;}
+  if(amount===previous)return;
   savingFixedIds.add(id);
   input.disabled=true;
-  if(status)status.textContent="שומר…";
   try{
     const {error}=await sb.from("fixed_expenses").update({amount}).eq("id",id);
     if(error)throw error;
@@ -1207,7 +1204,6 @@ window.saveFixed=async(id)=>{
     });
   }catch(err){
     input.value=String(previous);
-    if(status)status.textContent="לא נשמר";
     toast(err?.message||"הסכום לא נשמר");
   }finally{
     savingFixedIds.delete(id);
