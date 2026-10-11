@@ -2902,3 +2902,121 @@ body{
     height:11px;
   }
 }
+
+
+/* v2.0.5 - expense breakdown chart tabs, larger legend typography, member percentages */
+#homePage .home-chart-heading{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px 12px;
+  margin-bottom:5px;
+}
+#homePage .home-chart-heading .home-panel-title{
+  margin:0;
+}
+#homePage .home-chart-tabs{
+  display:inline-flex;
+  direction:rtl;
+  gap:3px;
+  padding:4px;
+  border:1px solid rgba(151,177,216,.18);
+  border-radius:13px;
+  background:rgba(4,10,22,.55);
+}
+#homePage .home-chart-tab{
+  min-height:36px;
+  padding:7px 13px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:#aabbd0;
+  font:700 14px/1.3 inherit;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:750;
+  cursor:pointer;
+  white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+#homePage .home-chart-tab.active{
+  color:#fff;
+  background:#445bd5;
+  box-shadow:0 3px 12px rgba(52,81,203,.24);
+}
+#homePage .home-chart-tab:focus-visible{
+  outline:2px solid #8cb8ff;
+  outline-offset:2px;
+}
+#homePage .home-legend-row{
+  grid-template-columns:14px minmax(0,1fr) auto;
+  gap:12px;
+  font-size:16px;
+  line-height:1.4;
+  min-height:30px;
+}
+#homePage .home-legend-name{
+  font-size:16px;
+  font-weight:750;
+}
+#homePage .home-legend-dot{
+  width:13px;
+  height:13px;
+}
+#homePage .home-legend-metrics{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  white-space:nowrap;
+  gap:1px;
+}
+#homePage .home-legend-pct{
+  font-size:16px;
+  font-weight:850;
+}
+#homePage .home-legend-amount{
+  font-size:13px;
+  color:#9eafc5;
+  font-weight:650;
+}
+.member-breakdown-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:48px;
+  padding:10px 2px;
+  border-bottom:1px solid rgba(151,177,216,.12);
+}
+.member-breakdown-row:last-child{border-bottom:0}
+.member-breakdown-name{font-size:16px;font-weight:700;min-width:0;overflow-wrap:anywhere}
+.member-breakdown-values{display:flex;align-items:center;gap:13px;white-space:nowrap}
+.member-breakdown-values strong{font-size:15px}
+.member-breakdown-values b{font-size:16px;color:#8b9dfd;min-width:45px;text-align:left}
+@media(max-width:600px){
+  #homePage .home-chart-heading{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  #homePage .home-chart-tabs{
+    width:100%;
+    justify-content:stretch;
+  }
+  #homePage .home-chart-tab{
+    flex:1 1 50%;
+    min-height:40px;
+    font-size:15px;
+  }
+  #homePage .home-chart-legend{gap:11px;padding:8px 6px 5px}
+  #homePage .home-legend-row{
+    grid-template-columns:14px minmax(0,1fr) auto;
+    gap:11px;
+    font-size:16px;
+    line-height:1.4;
+    min-height:34px;
+  }
+  #homePage .home-legend-name{font-size:16px;white-space:normal;overflow:visible;text-overflow:clip}
+  #homePage .home-legend-pct{font-size:17px}
+  #homePage .home-legend-amount{font-size:13px}
+}
